@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Hub • Learning Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/canvas-confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .page-screen { display: none; }
+        .page-screen.active { 
+            display: flex; 
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .bounce-gentle { animation: bounceGentle 2s infinite ease-in-out; }
+        @keyframes bounceGentle {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.5)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 30px rgba(245, 158, 11, 0.8)); transform: scale(1.06); }
+        }
+        .motion-graphic { animation: pulseGlow 3s infinite ease-in-out; }
+        .input-gamified { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .input-gamified:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -4px rgba(99, 102, 241, 0.4);
+        }
+        .card-hover { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.3);
+        }
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body id="appBody" class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between overflow-x-hidden selection:bg-amber-400 selection:text-slate-950">
+
+    <!-- Top Header & Soundtrack Controls -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-500/30 bounce-gentle">
+                    🚀
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-sm sm:text-base text-slate-100 flex items-center gap-2">
+                        Quest Hub 
+                        <span id="subHeaderBadge" class="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30 uppercase tracking-wide">Arena</span>
+                    </h1>
+                    <p id="subHeaderProgress" class="text-xs text-slate-400 font-medium">Ready to Play!</p>
+                </div>
+            </div>
+
+            <!-- Stats & Sound Controls -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <!-- Audio Selector & Controls -->
+                <div class="flex items-center bg-slate-800 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Audio</span>
+                    <select id="bgmSelect" onchange="changeMusicTrack(this.value)" class="bg-transparent text-slate-200 font-bold outline-none cursor-pointer text-xs">
+                        <option value="off" class="bg-slate-900 text-slate-300">Music: Off</option>
+                        <option value="synthwave" class="bg-slate-900 text-slate-300" selected>Synthwave Pulse</option>
+                        <option value="chiptune" class="bg-slate-900 text-slate-300">8-Bit Chiptune</option>
+                        <option value="quest" class="bg-slate-900 text-slate-300">Quest Synth Anthem</option>
+                        <option value="lofi" class="bg-slate-900 text-slate-300">Lo-Fi Focus</option>
+                        <option value="arcade" class="bg-slate-900 text-slate-300">High-Energy Arcade</option>
+                        <option value="study" class="bg-slate-900 text-slate-300">Study Ambient</option>
+                        <option value="piano" class="bg-slate-900 text-slate-300">Relaxing Piano</option>
+                    </select>
+
+                    <button type="button" id="bgmPlayToggleBtn" onclick="toggleMusicPlay()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-2 py-0.5 rounded-lg text-[10px] transition-colors cursor-pointer">
+                        PLAY
+                    </button>
+
+                    <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="0.2" oninput="updateMusicVolume(this.value)" class="w-12 accent-indigo-500 cursor-pointer" title="Music Volume">
+                </div>
+
+                <!-- Streak Badge -->
+                <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700/80 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-amber-400 shadow-inner" title="Daily Streak">
+                    <span class="text-[10px] text-slate-400 uppercase">Streak:</span>
+                    <span id="streakCount">0</span>
+                </div>
+
+                <!-- XP Badge -->
+                <div class="flex items-center gap-1.5 bg-indigo-950 border border-indigo-800 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-indigo-300 shadow-inner">
+                    <span class="text-amber-400 text-[10px] uppercase">XP:</span>
+                    <span id="xpCount">0</span>
+                </div>
+
+                <!-- Audio FX Toggle -->
+                <button type="button" onclick="toggleAudio()" id="audioBtn" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold transition-colors cursor-pointer" title="Toggle Sound FX">
+                    Sound On
+                </button>
+
+                <!-- Admin / Auth Action -->
+                <div id="authHeaderActions" class="flex items-center gap-2"></div>
+            </div>
+        </div>
+
+        <!-- German Quick Accent Bar -->
+        <div id="germanAccentBar" class="bg-slate-950/90 border-t border-slate-800/80 px-4 py-1.5 flex items-center justify-center gap-2 text-xs hidden">
+            <span class="text-amber-400 font-extrabold uppercase tracking-wider text-[10px]">German Accents:</span>
+            <button type="button" onclick="insertChar('ß')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">ß</button>
+            <button type="button" onclick="insertChar('ä')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">ä</button>
+            <button type="button" onclick="insertChar('ö')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">ö</button>
+            <button type="button" onclick="insertChar('ü')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">ü</button>
+            <button type="button" onclick="insertChar('Ä')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">Ä</button>
+            <button type="button" onclick="insertChar('Ö')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">Ö</button>
+            <button type="button" onclick="insertChar('Ü')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-extrabold rounded-lg border border-slate-700 transition-colors shadow-sm cursor-pointer">Ü</button>
+        </div>
+
+        <!-- Progress Tracker Bar -->
+        <div class="w-full bg-slate-800/50 h-2.5 overflow-hidden">
+            <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-rose-500 to-amber-400 h-full w-0 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(245,158,11,0.6)]"></div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-6 flex flex-col justify-center">
+
+        <!-- ACCOUNT AUTH SCREEN -->
+        <div id="authScreen" class="page-screen active flex-col items-center justify-center text-center">
+            <div class="w-full bg-slate-900 border-2 border-indigo-500/40 rounded-3xl p-8 sm:p-12 shadow-[0_0_50px_rgba(99,102,241,0.2)] relative overflow-hidden">
+                <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600 border-2 border-amber-300/60 rounded-3xl flex items-center justify-center mx-auto mb-6 bounce-gentle shadow-2xl shadow-indigo-500/40 text-4xl">
+                    🚀
+                </div>
+
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-2">Welcome to Quest Hub</h2>
+                <p class="text-slate-400 text-sm max-w-md mx-auto mb-6 font-medium">
+                    Sign in to access your synchronized quests, streak tracking, and custom study sets.
+                </p>
+
+                <!-- Auth Initial Action Buttons -->
+                <div id="authInitialButtons" class="flex justify-center gap-4 max-w-xs mx-auto mb-6">
+                    <button type="button" onclick="showSignInForm()" class="flex-1 py-3 bg-indigo-600 text-white font-black text-sm rounded-xl shadow-lg transition-all cursor-pointer hover:bg-indigo-500">Sign In</button>
+                    <button type="button" onclick="showSignUpForm()" class="flex-1 py-3 bg-slate-800 text-slate-300 font-black text-sm rounded-xl transition-all cursor-pointer hover:bg-slate-700">Create Account</button>
+                </div>
+
+                <!-- SIGN IN FORM -->
+                <form id="signInForm" onsubmit="handleSignIn(event)" class="max-w-xs mx-auto space-y-4 text-left hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Username</label>
+                        <input type="text" id="loginUsername" required placeholder="Enter username..." class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Enter password..." class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <label class="flex items-center gap-2 text-slate-300 font-bold cursor-pointer">
+                            <input type="checkbox" id="rememberMe" class="accent-indigo-500 rounded">
+                            Remember Me
+                        </label>
+                        <button type="button" onclick="forgotPasswordAlert()" class="text-amber-400 hover:underline font-bold">Forgot Password?</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="hideAuthForms()" class="px-3 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer">Back</button>
+                        <button type="submit" class="flex-1 py-3.5 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-600 hover:from-amber-300 hover:to-indigo-500 text-slate-950 font-black text-base rounded-xl shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer">
+                            Sign In & Launch
+                        </button>
+                    </div>
+                </form>
+
+                <!-- SIGN UP FORM -->
+                <form id="signUpForm" onsubmit="handleSignUp(event)" class="max-w-xs mx-auto space-y-3 text-left hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Real Name</label>
+                        <input type="text" id="regRealName" required placeholder="Your full name" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Username</label>
+                        <input type="text" id="regUsername" required placeholder="Choose a username" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="regPassword" required placeholder="Create a password" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Invite Code</label>
+                        <input type="text" id="regInviteCode" required placeholder="Enter invite code..." class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-amber-300 font-mono text-sm outline-none focus:border-amber-400">
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" onclick="hideAuthForms()" class="px-3 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer">Back</button>
+                        <button type="submit" class="flex-1 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-base rounded-xl shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer">
+                            Register Account
+                        </button>
+                    </div>
+                </form>
+
+                <p id="authErrorMsg" class="text-xs text-rose-400 font-extrabold mt-4 hidden"></p>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD SCREEN -->
+        <div id="adminScreen" class="page-screen flex-col">
+            <div class="bg-slate-900 border-2 border-amber-400/50 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <span class="text-xs font-black text-amber-400 uppercase tracking-widest">Admin Command Center</span>
+                        <h2 class="text-2xl font-black text-white mt-1">Manage Users & Accounts</h2>
+                    </div>
+                    <button type="button" onclick="returnToLanding()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer">Exit Admin</button>
+                </div>
+
+                <p class="text-xs text-slate-400 mb-6 font-medium">Review registered accounts below. Passwords remain hidden for security. Inappropriate accounts can be permanently deleted.</p>
+
+                <div class="space-y-3 max-h-96 overflow-y-auto pr-2" id="adminUsersList"></div>
+            </div>
+        </div>
+
+        <!-- MOTION GRAPHIC GREETING TRANSITION -->
+        <div id="pageGreeting" class="page-screen flex-col items-center justify-center text-center">
+            <div class="w-full bg-slate-900 border-2 border-amber-400/60 rounded-3xl p-10 sm:p-16 shadow-[0_0_60px_rgba(245,158,11,0.3)] relative overflow-hidden">
+                <div class="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center motion-graphic">
+                    <div class="absolute inset-0 rounded-3xl bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600 opacity-75 blur-md animate-pulse"></div>
+                    <div class="relative w-28 h-28 bg-slate-950 border-2 border-amber-400 rounded-3xl flex items-center justify-center text-5xl text-amber-400 shadow-2xl">
+                        ★
+                    </div>
+                </div>
+
+                <span class="text-xs font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">System Initialization</span>
+                
+                <h2 id="greetingTitle" class="text-3xl sm:text-5xl font-black text-white mt-4 mb-3">Hello, Hero!</h2>
+                <p class="text-slate-300 text-base sm:text-lg max-w-md mx-auto font-medium mb-6">
+                    Loading your personal quest arena & progress...
+                </p>
+
+                <div class="w-48 h-2 bg-slate-950 rounded-full mx-auto overflow-hidden border border-slate-800">
+                    <div id="greetingBar" class="h-full bg-gradient-to-r from-amber-400 to-indigo-500 w-0 transition-all duration-1000 ease-out"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN MISSION CONTROL / LANDING PAGE -->
+        <div id="landingPage" class="page-screen flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <span class="text-xs font-black text-amber-400 uppercase tracking-widest">Mission Control</span>
+                    <h2 class="text-3xl font-black text-white mt-1">Welcome, <span id="landingStudentName" class="text-amber-300 underline decoration-indigo-500">Hero</span>!</h2>
+                    <p class="text-sm text-slate-400 font-medium mt-1">Choose a pre-built module or manage custom sets below.</p>
+                </div>
+
+                <!-- Trophies & Achievements Showcase Bar -->
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            Achievement Trophy Cabinet
+                        </span>
+                        <span id="trophyProgressText" class="text-xs text-indigo-300 font-bold">0 / 4 Unlocked</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center" id="trophyGrid"></div>
+                </div>
+
+                <!-- Language Tabs / Import -->
+                <div class="flex justify-center gap-3 mb-6 flex-wrap">
+                    <button type="button" onclick="switchLangTab('german')" id="germanTabBtn" class="px-5 py-3 bg-indigo-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all cursor-pointer transform hover:scale-105 border-2 border-indigo-400">
+                        German Module 2
+                    </button>
+                    <button type="button" onclick="switchLangTab('latin')" id="latinTabBtn" class="px-5 py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 font-black text-xs sm:text-sm rounded-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-transparent">
+                        Latin Book 1
+                    </button>
+                    <button type="button" onclick="switchLangTab('custom')" id="customTabBtn" class="px-5 py-3 bg-slate-800 text-amber-300 hover:bg-slate-700 font-black text-xs sm:text-sm rounded-2xl transition-all cursor-pointer transform hover:scale-105 border-2 border-amber-500/40">
+                        Custom Sets & Hub
+                    </button>
+                </div>
+
+                <!-- German Units Grid -->
+                <div id="germanUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+                <!-- Latin Stages Grid -->
+                <div id="latinUnitsGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3 hidden"></div>
+
+                <!-- Custom Sets Grid -->
+                <div id="customUnitsGrid" class="hidden space-y-4">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-center gap-3">
+                        <label class="w-full sm:w-auto flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-lg cursor-pointer flex items-center justify-center gap-2 text-center">
+                            Load Set File
+                            <input type="file" id="importFileJson" accept=".json" onchange="loadCustomSetFromFile(event)" class="hidden">
+                        </label>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                        <h3 class="text-lg font-black text-white mb-2">Quick Text Import</h3>
+                        <p class="text-xs text-slate-400 mb-4">Paste terms and definitions below, select the two spoken languages from the searchable dropdowns, choose separator, and save your set!</p>
+
+                        <div class="mb-4">
+                            <label for="importTitle" class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Set Title / Topic</label>
+                            <input type="text" id="importTitle" placeholder="Chapter 1" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400">
+                        </div>
+
+                        <!-- Dual Searchable Dropdowns -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider">Side 1 Language (TTS Prompt)</label>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <input type="text" id="langSearchInput1" oninput="filterLanguageDropdown(1, this.value)" placeholder="Search lang 1..." class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-xs outline-none focus:border-amber-400">
+                                    <label class="flex items-center gap-1 text-[11px] text-slate-300 font-bold cursor-pointer bg-slate-900 px-2 py-2 rounded-xl border border-slate-700">
+                                        <input type="checkbox" id="langFilterOnlyActive1" onchange="filterLanguageDropdown(1, document.getElementById('langSearchInput1').value)" class="accent-amber-400">
+                                        Filter
+                                    </label>
+                                </div>
+                                <select id="importLangSelect1" size="4" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-amber-300 font-bold text-xs outline-none focus:border-amber-400 cursor-pointer">
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider">Side 2 Language (TTS Answer)</label>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <input type="text" id="langSearchInput2" oninput="filterLanguageDropdown(2, this.value)" placeholder="Search lang 2..." class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-xs outline-none focus:border-amber-400">
+                                    <label class="flex items-center gap-1 text-[11px] text-slate-300 font-bold cursor-pointer bg-slate-900 px-2 py-2 rounded-xl border border-slate-700">
+                                        <input type="checkbox" id="langFilterOnlyActive2" onchange="filterLanguageDropdown(2, document.getElementById('langSearchInput2').value)" class="accent-amber-400">
+                                        Filter
+                                    </label>
+                                </div>
+                                <select id="importLangSelect2" size="4" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-amber-300 font-bold text-xs outline-none focus:border-amber-400 cursor-pointer">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="separatorSelect" class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Separator Between Terms</label>
+                            <select id="separatorSelect" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-xs outline-none focus:border-amber-400 cursor-pointer">
+                                <option value="space" selected>Space ( )</option>
+                                <option value="dash">Dash (-)</option>
+                                <option value="comma">Comma (,)</option>
+                                <option value="tab">Tab (⇥)</option>
+                                <option value="colon">Colon (:)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="importData" class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Terms & Definitions (Paste here)</label>
+                            <textarea id="importData" rows="5" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-amber-300 font-mono text-xs outline-none focus:border-amber-400"></textarea>
+                        </div>
+
+                        <button type="button" onclick="processCustomImport()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm rounded-xl shadow-lg cursor-pointer">
+                            Import & Save Set
+                        </button>
+                        <p id="importError" class="text-xs text-rose-400 font-extrabold mt-2 hidden">Please provide a title and at least one valid term pair!</p>
+                    </div>
+
+                    <div id="savedCustomSetsContainer" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT CUSTOM SET SCREEN -->
+        <div id="editCustomScreen" class="page-screen flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <span class="text-xs font-black text-amber-400 uppercase tracking-widest">Set Editor</span>
+                        <h2 id="editSetTitleHeader" class="text-2xl font-black text-white mt-1">Edit Custom Set</h2>
+                    </div>
+                    <button type="button" onclick="returnToLanding()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer">Cancel</button>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-2">Custom Set Actions</label>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" onclick="toggleReverseEditSet()" id="reverseEditBtn" class="flex-1 py-3 bg-slate-950 border-2 border-slate-800 hover:border-amber-400 text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2">
+                            Flip Question & Answer (Currently: Normal A → B)
+                        </button>
+                        <button type="button" onclick="deleteActiveCustomSet()" class="px-5 py-3 bg-rose-500/20 hover:bg-rose-600 border-2 border-rose-500/40 text-rose-300 hover:text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+                            🗑️ Delete This Custom Set
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-bold text-amber-300 uppercase tracking-wider">Flashcards List</label>
+                        <button type="button" onclick="addNewFlashcardRow()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-lg cursor-pointer">Add Card</button>
+                    </div>
+                    <div id="editFlashcardsListContainer" class="space-y-3 max-h-72 overflow-y-auto pr-2"></div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4 mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="saveEditedCustomSet()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl shadow-lg cursor-pointer">
+                        Save & Apply Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PUSH NOTIFICATION POPUP MODAL -->
+        <div id="notificationPopupModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-slate-900 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center relative">
+                <div class="w-16 h-16 bg-amber-500/20 border border-amber-400/50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl text-amber-400">
+                    🔔
+                </div>
+                <h3 class="text-xl font-black text-white mb-2">Want to get better?</h3>
+                <p class="text-xs text-slate-300 font-medium mb-6">
+                    Turn on notifications to keep your daily streak alive and receive study updates!
+                </p>
+                <div class="flex flex-col gap-3">
+                    <button type="button" onclick="enableNotifications()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-black text-sm rounded-xl shadow-lg cursor-pointer">
+                        Turn On Notifications
+                    </button>
+                    <button type="button" onclick="closeNotificationPopup()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer">
+                        Maybe Later
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DISMISSIBLE PERSISTENT STORAGE INTRO MODAL -->
+        <div id="downloadWarningModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-slate-900 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center">
+                <div class="w-16 h-16 bg-amber-500/20 border border-amber-400/50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-xs font-bold text-amber-400">
+                    💾
+                </div>
+                <h3 class="text-xl font-black text-white mb-2">Persistent Account Storage Active</h3>
+                <p class="text-xs text-slate-300 font-medium mb-6">
+                    Your custom sets and quiz streak are saved directly to your account! You can also download standalone set files anytime.
+                </p>
+                <div class="flex flex-col gap-3">
+                    <label class="flex items-center justify-center gap-2 text-xs text-slate-400 font-bold cursor-pointer mb-2">
+                        <input type="checkbox" id="dontShowStorageWarning" class="accent-amber-400 rounded">
+                        Don't show this message again
+                    </label>
+                    <button type="button" onclick="closeDownloadWarning()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-black text-sm rounded-xl shadow-lg cursor-pointer">
+                        Got it, Let's Play!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STUDY MODE SELECTOR SCREEN -->
+        <div id="modeSelectorScreen" class="page-screen flex-col items-center justify-center text-center">
+            <div class="w-full max-w-md bg-slate-900 border-2 border-indigo-500/50 rounded-3xl p-8 shadow-2xl relative">
+                <span class="text-xs font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">Study Hub</span>
+                <h2 id="modeSelectorTitle" class="text-2xl font-black text-white mt-3 mb-2">Select Study Mode</h2>
+                <p class="text-xs text-slate-400 mb-8 font-medium">Choose how you want to master this set:</p>
+
+                <div class="space-y-4">
+                    <button type="button" onclick="startFlashcardsMode()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-base rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 cursor-pointer flex items-center justify-center gap-3">
+                        Flashcard Study Mode
+                    </button>
+                    <button type="button" onclick="startMultipleChoiceMode()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-base rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 cursor-pointer flex items-center justify-center gap-3">
+                        Arcade Multiple Choice Quiz
+                    </button>
+                    <button type="button" onclick="startQuizMode()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 cursor-pointer flex items-center justify-center gap-3">
+                        Written Quiz Challenge
+                    </button>
+                </div>
+
+                <button type="button" onclick="returnToLanding()" class="mt-6 text-xs text-slate-400 hover:text-white font-bold transition-colors cursor-pointer">
+                    Back to Mission Control
+                </button>
+            </div>
+        </div>
+
+        <!-- FLASHCARD STUDY SCREEN -->
+        <div id="flashcardScreen" class="page-screen flex-col items-center">
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <span id="fcBadge" class="text-xs font-black text-amber-400 uppercase tracking-widest">Flashcards</span>
+                        <h2 id="fcTitle" class="text-xl font-black text-white mt-1">Study Mode</h2>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="startQuizMode()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition-colors cursor-pointer flex items-center gap-1.5">
+                            Take Written Quiz
+                        </button>
+                        <div id="fcCounter" class="text-xs font-black bg-indigo-950 text-indigo-300 border border-indigo-800 px-3 py-1.5 rounded-xl">1 / 10</div>
+                    </div>
+                </div>
+
+                <!-- Flashcard 3D Flip Box -->
+                <div class="perspective-1000 w-full h-64 sm:h-72 mb-6 cursor-pointer" onclick="flipFlashcard()">
+                    <div id="flashcardInner" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-2xl">
+                        <div class="absolute inset-0 w-full h-full bg-slate-950 border-2 border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center backface-hidden">
+                            <span class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                Term / Question
+                                <button type="button" onclick="event.stopPropagation(); speakText(document.getElementById('fcFrontText').textContent, 1)" class="p-1 bg-indigo-600/30 hover:bg-indigo-600 text-amber-300 rounded-md text-xs cursor-pointer" title="Pronounce">🔊 Listen</button>
+                            </span>
+                            <h3 id="fcFrontText" class="text-2xl sm:text-3xl font-black text-white">Question</h3>
+                            <span class="text-[10px] text-slate-500 mt-4">Click card to flip</span>
+                        </div>
+                        <div class="absolute inset-0 w-full h-full bg-indigo-950/90 border-2 border-indigo-500/50 rounded-2xl p-6 flex flex-col items-center justify-center backface-hidden rotate-y-180">
+                            <span class="text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                Answer / Definition
+                                <button type="button" onclick="event.stopPropagation(); speakText(document.getElementById('fcBackText').textContent, 2)" class="p-1 bg-amber-400/20 hover:bg-amber-400 text-amber-300 hover:text-slate-950 rounded-md text-xs cursor-pointer" title="Pronounce">🔊 Listen</button>
+                            </span>
+                            <h3 id="fcBackText" class="text-2xl sm:text-3xl font-black text-amber-300">Answer</h3>
+                            <span class="text-[10px] text-indigo-400 mt-4">Click card to flip back</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <button type="button" onclick="prevFlashcard()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs sm:text-sm rounded-xl border border-slate-700 transition-colors cursor-pointer">
+                        Previous Card
+                    </button>
+                    <button type="button" onclick="nextFlashcard()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer">
+                        Next Card ➔
+                    </button>
+                </div>
+
+                <button type="button" onclick="returnToLanding()" class="mt-6 text-xs text-slate-400 hover:text-white font-bold transition-colors cursor-pointer">
+                    Exit to Mission Control
+                </button>
+            </div>
+        </div>
+
+        <!-- MULTIPLE CHOICE QUIZ SCREEN -->
+        <div id="mcQuizScreen" class="page-screen flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <span id="mcBadge" class="text-xs font-black text-amber-400 uppercase tracking-widest">Arcade Quiz</span>
+                        <h2 id="mcTitle" class="text-2xl font-black text-white mt-1">Multiple Choice</h2>
+                    </div>
+                    <div id="mcCounter" class="text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl">1 / 10</div>
+                </div>
+
+                <div class="bg-slate-950 border-2 border-indigo-500/40 rounded-2xl p-6 text-center mb-6">
+                    <span class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider mb-2 block">Translate this term</span>
+                    <h3 id="mcPromptText" class="text-2xl sm:text-3xl font-black text-white">...</h3>
+                    <button type="button" onclick="speakText(document.getElementById('mcPromptText').textContent, 1)" class="mt-2 text-xs font-bold text-indigo-400 hover:text-amber-300 inline-flex items-center gap-1 cursor-pointer">🔊 Listen</button>
+                </div>
+
+                <div id="mcOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
+
+                <div class="flex justify-between items-center">
+                    <button type="button" onclick="returnToLanding()" class="text-xs text-slate-400 hover:text-white font-bold transition-colors cursor-pointer">
+                        Quit Challenge
+                    </button>
+                    <span id="mcTimerText" class="text-xs font-extrabold text-amber-400"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- WRITTEN QUIZ SCREEN -->
+        <div id="quizScreen" class="page-screen flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                    <div>
+                        <span id="quizUnitBadge" class="text-xs font-black text-amber-400 uppercase tracking-widest">Section 1</span>
+                        <h2 id="quizUnitTitle" class="text-2xl font-black text-white mt-1">Vocabulary Arena</h2>
+                        <p id="quizPromptSubtitle" class="text-xs text-slate-400 font-medium mt-1">Provide exact answers.</p>
+                    </div>
+                    <div id="quizNumBox" class="w-12 h-12 bg-indigo-950 border-2 border-indigo-500/50 rounded-2xl flex items-center justify-center font-black text-amber-400 text-lg shadow-md">01</div>
+                </div>
+
+                <div id="quizContainer" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- RESULTS SCREEN -->
+        <div id="resultsScreen" class="page-screen flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 border-2 border-amber-400/50 p-6 sm:p-8 rounded-2xl shadow-2xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div class="z-10 text-center sm:text-left">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-black mb-3 border border-amber-400/30">
+                            <span id="rankBadge">LEGENDARY STATUS</span>
+                        </div>
+                        <h2 id="congratsHeader" class="text-3xl sm:text-4xl font-black text-white mb-1">Epic Run, Hero!</h2>
+                        <p class="text-slate-300 text-sm font-medium">You smashed this arena challenge!</p>
+                    </div>
+
+                    <div class="z-10 bg-slate-950/90 border-2 border-amber-400 p-5 rounded-2xl text-center min-w-[150px] shadow-2xl">
+                        <div id="finalScorePercent" class="text-4xl font-black text-amber-400">100%</div>
+                        <div id="finalScoreMarks" class="text-xs font-extrabold text-indigo-300 mt-1 uppercase">0 / 0 Marks</div>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-800 pb-3 mb-6 flex justify-between items-center">
+                    <h3 class="text-lg font-black text-white">Battle Review & Answer Explanations</h3>
+                    <button type="button" id="reviewMissedBtn" onclick="launchSmartPracticeMissed()" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md cursor-pointer hidden">
+                        Review Missed Words
+                    </button>
+                </div>
+
+                <div id="resultsList" class="space-y-4"></div>
+
+                <div class="mt-8 text-center flex flex-wrap justify-center gap-4">
+                    <button type="button" onclick="returnToLanding()" class="px-8 py-4 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-600 hover:from-amber-300 hover:to-indigo-500 text-slate-950 font-black text-base rounded-2xl shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer">
+                        Choose Next Quest
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar for Written Quiz -->
+        <div id="navControls" class="hidden mt-6 flex items-center justify-between">
+            <button type="button" id="prevBtn" onclick="returnToLanding()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-sm rounded-xl border border-slate-700 transition-colors cursor-pointer">
+                Back to Arena
+            </button>
+            <button type="button" id="nextBtn" onclick="submitQuiz()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/30 transition-transform active:scale-95 cursor-pointer">
+                Submit Answers!
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 text-center text-xs text-slate-600 font-semibold border-t border-slate-900 flex justify-between items-center max-w-4xl mx-auto px-4 w-full">
+        <span>Quest Hub • Interactive Learning Arena</span>
+        <span id="footerUserLabel" class="text-slate-500">Not Signed In</span>
+    </footer>
+
+    <script>
+        // 31 BRAND NEW WORKING INVITE CODES (Fresh Storage Key v3)
+        let availableInviteCodes = [
+            'q7vtr82klmn3-54ptywzxc9', 'm4kjp91zxcv6-83qazwrtm2', 'b9wqe23hytr7-15plkjfvd4', 
+            'z2asd76poiuyt-98mnbvfrt1', 'x5zxc14lkjhgf-37qazwsxc6', 'v8poiuy82qazws-24mnbvfrt5', 
+            'n1lkjh93mnbv6-69qazwsxc8', 'm6mnbv45qazwsx-71poiuytr2', 'k3qaz78poiuyt-42lkjhgfd9', 
+            'j9wsx12lkjhgf-85qazwsxc3', 'h4edc56qazwsx-19poiuytr4', 'f7rfv90poiuyt-63lkjhgfd5', 
+            'd2tgb34lkjhgf-91qazwsxc7', 's8yhn67qazwsx-28poiuytr6', 'a1ujm89poiuyt-52lkjhgfd8', 
+            'q6ikm21lkjhgf-74qazwsxc1', 'w3opl54qazwsx-39poiuytr2', 'e9qaz76poiuyt-81lkjhgfd3', 
+            'r4wsx83lkjhgf-16qazwsxc5', 't7edc19qazwsx-47poiuytr6', 'y2rfv42poiuyt-95lkjhgfd7', 
+            'u5tgb65lkjhgf-23qazwsxc8', 'i8yhn98qazwsx-64poiuytr9', 'o1ujm37poiuyt-31lkjhgfd1', 
+            'p6ikm54lkjhgf-82qazwsxc2', 'z3opl21qazwsx-17poiuytr3', 'x9qaz68poiuyt-59lkjhgfd4', 
+            'v4wsx75lkjhgf-72qazwsxc6', 'n8edc39qazwsx-48poiuytr7', 'm1rfv24poiuyt-13lkjhgfd8', 'k7tgb81lkjhgf-96qazwsxc9'
+        ];
+        try {
+            const savedCodes = localStorage.getItem('quest_invite_codes_v3');
+            if (savedCodes) {
+                const parsed = JSON.parse(savedCodes);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    availableInviteCodes = parsed;
+                }
+            }
+        } catch(e){}
+
+        function saveInviteCodes() {
+            try { localStorage.setItem('quest_invite_codes_v3', JSON.stringify(availableInviteCodes)); } catch(e){}
+        }
+
+        let accounts = [];
+        try {
+            const savedAccs = localStorage.getItem('quest_user_accounts');
+            if (savedAccs) accounts = JSON.parse(savedAccs);
+        } catch(e){ accounts = []; }
+
+        if (!accounts.some(a => a.username === 'Rufus_Admin')) {
+            accounts.push({
+                realName: 'Master Admin',
+                username: 'Rufus_Admin',
+                passwordHash: 'quest.admin',
+                isAdmin: true,
+                customSets: [],
+                xp: 0,
+                streak: 0,
+                lastQuestDate: null,
+                trophies: [],
+                notificationShown: false
+            });
+        }
+
+        function saveAccountsToStorage() {
+            try { localStorage.setItem('quest_user_accounts', JSON.stringify(accounts)); } catch(e){}
+        }
+
+        let currentUser = null;
+        let lastFocusedInput = null;
+        let audioEnabled = true;
+
+        let audioCtx;
+        let musicTimer = null;
+        let isMusicPlaying = false;
+        let currentTrack = 'synthwave';
+        let musicVolume = 0.2;
+
+        let activeLang = 'german';
+        let activeUnitIndex = 0;
+        let activeCustomSet = null;
+        let currentFlashcards = [];
+        let currentFlashcardIndex = 0;
+        let isFlashcardFlipped = false;
+        let missedWordsList = [];
+        let quizStartTime = 0;
+
+        let mcQuestions = [];
+        let mcIndex = 0;
+        let mcUserScore = 0;
+        let mcUserAnswers = [];
+
+        // GERMAN UNITS (PROMPT: ENGLISH -> DE: GERMAN)
+        const GERMAN_UNITS = [
+            {
+                badge: "Kulturzone",
+                title: "Finde deine AG!",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "What do we do?", de: ["Was machen wir."] },
+                    { prompt: "We make music.", de: ["Wir machen Musik."] },
+                    { prompt: "We do yoga.", de: ["Wir machen Yoga."] },
+                    { prompt: "We sing songs.", de: ["Wir singen Lieder."] },
+                    { prompt: "We play handball.", de: ["Wir spielen Handball."] },
+                    { prompt: "We watch films.", de: ["Wir sehen Filme."] },
+                    { prompt: "We build robots.", de: ["Wir bauen Roboter."] },
+                    { prompt: "after-school club", de: ["die Arbeitsgemeinschaft (AG)"] },
+                    { prompt: "class", de: ["die Klasse"] },
+                    { prompt: "club", de: ["der Klub"] },
+                    { prompt: "school", de: ["die Schule"] },
+                    { prompt: "male students", de: ["die Schüler"] },
+                    { prompt: "female students", de: ["die Schülerinnen"] },
+                    { prompt: "Which after-school clubs do you have at your school?", de: ["Welche AGs hast du in deiner Schule?"] },
+                    { prompt: "We have", de: ["Wir haben."] },
+                    { prompt: "a choir club", de: ["eine Chor-AG"] },
+                    { prompt: "a film club", de: ["eine Film-AG"] },
+                    { prompt: "a handball club", de: ["eine Handball-AG"] },
+                    { prompt: "an orchestra club", de: ["eine Orchester-AG"] },
+                    { prompt: "a technology club", de: ["eine Technik-AG"] },
+                    { prompt: "a yoga club", de: ["eine Yoga-AG"] },
+                    { prompt: "sometimes", de: ["manchmal."] },
+                    { prompt: "often", de: ["oft."] },
+                    { prompt: "in the mornings", de: ["morgens."] },
+                    { prompt: "in the afternoons", de: ["nachmittags."] },
+                    { prompt: "in the evenings", de: ["abends."] }
+                ]
+            },
+            {
+                badge: "Unit 1",
+                title: "Das ist meine Schule!",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "That is", de: ["Das ist."] },
+                    { prompt: "the library", de: ["die Bibliothek"] },
+                    { prompt: "the computer room", de: ["der Computerraum"] },
+                    { prompt: "the canteen", de: ["die Kantine"] },
+                    { prompt: "the classroom", de: ["das Klassenzimmer"] },
+                    { prompt: "the lab", de: ["das Labor"] },
+                    { prompt: "the staffroom", de: ["das Lehrerzimmer"] },
+                    { prompt: "the playground", de: ["der Schulhof"] },
+                    { prompt: "the sports hall", de: ["die Sporthalle"] },
+                    { prompt: "Do you like your school?", de: ["Magst du deine Schule?"] },
+                    { prompt: "What is like", de: ["Wie ist."] },
+                    { prompt: "I like my school because", de: ["Ich mag meine Schule, denn."] },
+                    { prompt: "I don't like my school because", de: ["Ich mag meine Schule nicht, denn."] },
+                    { prompt: "it is good", de: ["sie ist gut."] },
+                    { prompt: "the library is quiet", de: ["die Bibliothek ist ruhig."] },
+                    { prompt: "the classes are big", de: ["die Klassen sind groß."] },
+                    { prompt: "the classrooms are modern", de: ["die Klassenzimmer sind modern."] },
+                    { prompt: "the labs are old", de: ["die Labors sind alt."] },
+                    { prompt: "the students are friendly", de: ["die Schüler sind freundlich.", "die Schülerinnen sind freundlich.", "die Schüler/ Schülerinnen sind freundlich."] },
+                    { prompt: "the teachers are funny", de: ["die Lehrer sind lustig."] }
+                ]
+            },
+            {
+                badge: "Unit 2",
+                title: "Zeit für Pause!",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "What do you do at breaktime?", de: ["Was machst du in der Pause?"] },
+                    { prompt: "At breaktime", de: ["In der Pause."] },
+                    { prompt: "I drink", de: ["trinke ich."] },
+                    { prompt: "cola", de: ["Cola."] },
+                    { prompt: "juice", de: ["Saft."] },
+                    { prompt: "water", de: ["Wasser."] },
+                    { prompt: "I eat", de: ["esse ich."] },
+                    { prompt: "a roll", de: ["ein Brötchen"] },
+                    { prompt: "chocolate", de: ["Schokolade."] },
+                    { prompt: "I play football", de: ["spiele ich Fußball."] },
+                    { prompt: "I do sport", de: ["mache ich Sport."] },
+                    { prompt: "I do my homework", de: ["mache ich meine Hausaufgaben."] },
+                    { prompt: "I talk to friends", de: ["rede ich mit Freunden."] },
+                    { prompt: "My male friend", de: ["Mein Freund."] },
+                    { prompt: "My female friend", de: ["Meine Freundin."] },
+                    { prompt: "drinks cola", de: ["trinkt Cola."] },
+                    { prompt: "eats an orange", de: ["isst eine Orange."] },
+                    { prompt: "plays football", de: ["spielt Fußball."] },
+                    { prompt: "does sport", de: ["macht Sport."] },
+                    { prompt: "does homework", de: ["macht Hausaufgaben."] },
+                    { prompt: "talks to friends", de: ["redet mit Freunden."] }
+                ]
+            },
+            {
+                badge: "Unit 3",
+                title: "Was lernst du?",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "What is your favourite subject?", de: ["Was ist dein Lieblingsfach?"] },
+                    { prompt: "My favourite subject is", de: ["Mein Lieblingsfach ist."] },
+                    { prompt: "My favourite subjects are", de: ["Meine Lieblingsfächer sind."] },
+                    { prompt: "German", de: ["Deutsch."] },
+                    { prompt: "English", de: ["Englisch."] },
+                    { prompt: "geography", de: ["Erdkunde."] },
+                    { prompt: "French", de: ["Französisch."] },
+                    { prompt: "history", de: ["Geschichte."] },
+                    { prompt: "computing", de: ["Informatik."] },
+                    { prompt: "art", de: ["Kunst."] },
+                    { prompt: "maths", de: ["Mathe."] },
+                    { prompt: "music", de: ["Musik."] },
+                    { prompt: "science", de: ["Naturwissenschaften."] },
+                    { prompt: "RE", de: ["Religion."] },
+                    { prompt: "Spanish", de: ["Spanisch."] },
+                    { prompt: "PE", de: ["Sport."] },
+                    { prompt: "DT technology", de: ["Technik."] },
+                    { prompt: "drama", de: ["Theater."] },
+                    { prompt: "favourite day", de: ["der Lieblingsday"] },
+                    { prompt: "Monday on Mondays", de: ["Montag, montags"] },
+                    { prompt: "Tuesday on Tuesdays", de: ["Dienstag, dienstags"] },
+                    { prompt: "Wednesday on Wednesdays", de: ["Mittwoch, mittwochs"] },
+                    { prompt: "Thursday on Thursdays", de: ["Donnerstag, donnerstags"] },
+                    { prompt: "Friday on Fridays", de: ["Freitag, freitags"] },
+                    { prompt: "Saturday on Saturdays", de: ["Samstag, samstags"] },
+                    { prompt: "Sunday on Sundays", de: ["Sonntag, sonntags"] },
+                    { prompt: "On Mondays I have history", de: ["Montags habe ich Geschichte."] },
+                    { prompt: "I learn nothing on Saturdays", de: ["Samstags lerne ich nichts."] }
+                ]
+            },
+            {
+                badge: "Unit 4",
+                title: "Magst du Deutsch?",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "Do you like maths", de: ["Magst du Mathe?"] },
+                    { prompt: "Yes I really like maths", de: ["Ja, ich mag Mathe sehr."] },
+                    { prompt: "Yes I love maths", de: ["Ja, ich liebe Mathe."] },
+                    { prompt: "No I don't like maths at all", de: ["Nein, ich mag Mathe gar nicht."] },
+                    { prompt: "I like maths because it is", de: ["Ich mag Mathe, weil es ist."] },
+                    { prompt: "I don't like maths because it is", de: ["Ich mag Mathe nicht, weil es ist."] },
+                    { prompt: "I like science because it is", de: ["Ich mag Naturwissenschaften, weil sie sind."] },
+                    { prompt: "I don't like science because it is", de: ["Ich mag Naturwissenschaften nicht, weil sie sind."] },
+                    { prompt: "cool", de: ["cool."] },
+                    { prompt: "easy", de: ["einfach."] },
+                    { prompt: "interesting", de: ["interessant."] },
+                    { prompt: "complicated", de: ["kompliziert."] },
+                    { prompt: "creative", de: ["kreativ."] },
+                    { prompt: "boring", de: ["langweilig."] },
+                    { prompt: "funny", de: ["lustig."] },
+                    { prompt: "difficult", de: ["schwierig."] },
+                    { prompt: "important", de: ["wichtig."] }
+                ]
+            },
+            {
+                badge: "Unit 5",
+                title: "Outfit des Tages: Schuluniform!",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "What do you wear at school", de: ["Was trägst du in der Schule?"] },
+                    { prompt: "I wear", de: ["Ich trage."] },
+                    { prompt: "He wears", de: ["Er trägt."] },
+                    { prompt: "She wears", de: ["Sie trägt."] },
+                    { prompt: "We wear", de: ["Wir tragen."] },
+                    { prompt: "a shirt", de: ["ein Hemd"] },
+                    { prompt: "trousers", de: ["eine Hose"] },
+                    { prompt: "a jacket", de: ["eine Jacke"] },
+                    { prompt: "a dress", de: ["ein Kleid"] },
+                    { prompt: "a tie", de: ["eine Krawatte"] },
+                    { prompt: "a skirt", de: ["einen Rock"] },
+                    { prompt: "a t-shirt", de: ["ein T-Shirt"] },
+                    { prompt: "shoes", de: ["Schuhe."] },
+                    { prompt: "a uniform", de: ["eine Uniform"] },
+                    { prompt: "The jacket is grey", de: ["Die Jacke ist grau."] },
+                    { prompt: "The shoes are black", de: ["Die Schuhe sind schwarz."] },
+                    { prompt: "I find my clothes", de: ["Ich finde meine Kleidung."] },
+                    { prompt: "comfortable", de: ["bequem."] },
+                    { prompt: "fine delicate", de: ["fein."] },
+                    { prompt: "modern", de: ["modern."] },
+                    { prompt: "beautiful lovely", de: ["schön."] },
+                    { prompt: "great", de: ["toll."] }
+                ]
+            },
+            {
+                badge: "Unit 6",
+                title: "Regeln, Regeln, Regeln!",
+                lang1: "en-GB",
+                lang2: "de-DE",
+                items: [
+                    { prompt: "What are you allowed to do at school", de: ["Was darfst du in der Schule machen?"] },
+                    { prompt: "You are allowed to", de: ["Man darf."] },
+                    { prompt: "play football at breaktime", de: ["in der Pause Fußball spielen"] },
+                    { prompt: "run in the playground", de: ["auf dem Schulhof laufen"] },
+                    { prompt: "play on your phone", de: ["auf dem Handy spielen"] },
+                    { prompt: "You are not allowed to in the classroom", de: ["Man darf im Klassenzimmer nicht."] },
+                    { prompt: "eat", de: ["essen."] },
+                    { prompt: "talk", de: ["reden."] },
+                    { prompt: "You must", de: ["Man muss."] },
+                    { prompt: "do a lot of homework", de: ["viele Hausaufgaben machen"] },
+                    { prompt: "be hard-working", de: ["fleißig sein"] },
+                    { prompt: "be quiet", de: ["ruhig sein"] },
+                    { prompt: "At my dream school you are allowed to", de: ["In meiner Traumschule darf man."] },
+                    { prompt: "At my dream school you must", de: ["In meiner Traumschule muss man."] },
+                    { prompt: "I find that", de: ["Das finde ich."] },
+                    { prompt: "In my opinion that is", de: ["Meiner Meinung nach ist das."] },
+                    { prompt: "In my opinion this rule is", de: ["Meiner Meinung nach ist diese Regel."] },
+                    { prompt: "relaxing", de: ["entspannend."] },
+                    { prompt: "fair", de: ["fair."] },
+                    { prompt: "unfair", de: ["unfair."] },
+                    { prompt: "good", de: ["gut."] },
+                    { prompt: "OK", de: ["okay."] },
+                    { prompt: "right", de: ["richtig."] }
+                ]
+            }
+        ];
+
+        // CAMBRIDGE LATIN BOOK 1
+        const LATIN_UNITS = [
+            {
+                badge: "Stage 1",
+                title: "Cambridge Latin Book 1 • Stage 1",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "canis", de: ["dog"] },
+                    { prompt: "coquus", de: ["cook"] },
+                    { prompt: "est", de: ["he is", "she is", "it is"] },
+                    { prompt: "filius", de: ["son"] },
+                    { prompt: "hortus", de: ["garden"] },
+                    { prompt: "in", de: ["in", "on"] },
+                    { prompt: "laborat", de: ["he works", "she works", "it works", "is working"] },
+                    { prompt: "mater", de: ["mother"] },
+                    { prompt: "pater", de: ["father"] },
+                    { prompt: "sedet", de: ["he sits", "she sits", "it sits", "is sitting"] },
+                    { prompt: "servus", de: ["slave"] },
+                    { prompt: "via", de: ["street", "road"] }
+                ]
+            },
+            {
+                badge: "Stage 2",
+                title: "Cambridge Latin Book 1 • Stage 2",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "amicus", de: ["friend"] },
+                    { prompt: "ancilla", de: ["slave-girl", "maid", "slave girl"] },
+                    { prompt: "cena", de: ["dinner"] },
+                    { prompt: "cibus", de: ["food"] },
+                    { prompt: "dominus", de: ["master"] },
+                    { prompt: "dormit", de: ["he sleeps", "she sleeps", "it sleeps", "is sleeping"] },
+                    { prompt: "intrat", de: ["he enters", "she enters", "it enters", "is entering"] },
+                    { prompt: "laetus", de: ["happy", "glad"] },
+                    { prompt: "laudat", de: ["he praises", "she praises", "it praises", "is praising"] },
+                    { prompt: "mercator", de: ["merchant", "trader"] },
+                    { prompt: "quoque", de: ["also", "too"] },
+                    { prompt: "salutat", de: ["he greets", "she greets", "it greets", "is greeting"] }
+                ]
+            },
+            {
+                badge: "Stage 3",
+                title: "Cambridge Latin Book 1 • Stage 3",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "bibit", de: ["he drinks", "she drinks", "it drinks"] },
+                    { prompt: "circumspectat", de: ["he looks round", "she looks round", "it looks round"] },
+                    { prompt: "clamat", de: ["he shouts", "she shouts", "it shouts"] },
+                    { prompt: "ecce!", de: ["look!"] },
+                    { prompt: "exit", de: ["he goes out", "she goes out", "it goes out"] },
+                    { prompt: "exspectat", de: ["he waits for", "she waits for", "it waits for"] },
+                    { prompt: "forum", de: ["market"] },
+                    { prompt: "ianua", de: ["door"] },
+                    { prompt: "iratus", de: ["angry"] },
+                    { prompt: "leo", de: ["lion"] },
+                    { prompt: "magnus", de: ["big", "great"] },
+                    { prompt: "navis", de: ["ship"] },
+                    { prompt: "non", de: ["not"] },
+                    { prompt: "portat", de: ["he carries", "she carries", "it carries"] },
+                    { prompt: "respondet", de: ["he replies", "she replies", "it replies"] },
+                    { prompt: "ridet", de: ["he laughs", "she laughs", "it laughs", "smiles"] },
+                    { prompt: "salve!", de: ["hello!"] },
+                    { prompt: "surgit", de: ["he gets up", "she gets up", "it gets up"] },
+                    { prompt: "taberna", de: ["shop", "inn"] }
+                ]
+            },
+            {
+                badge: "Stage 4",
+                title: "Cambridge Latin Book 1 • Stage 4",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "agit", de: ["he does", "she does", "it does"] },
+                    { prompt: "anulus", de: ["ring"] },
+                    { prompt: "coquit", de: ["he cooks", "she cooks", "it cooks"] },
+                    { prompt: "e", de: ["from", "out of"] },
+                    { prompt: "eheu!", de: ["oh dear! oh no!"] },
+                    { prompt: "habet", de: ["he has", "she has", "it has"] },
+                    { prompt: "inquit", de: ["he says", "she says", "it says"] },
+                    { prompt: "judex", de: ["judge"] },
+                    { prompt: "mendax", de: ["liar"] },
+                    { prompt: "pecunia", de: ["money"] },
+                    { prompt: "perterritus", de: ["terrified"] },
+                    { prompt: "poeta", de: ["poet"] },
+                    { prompt: "quaerit", de: ["he searches for", "she searches for", "it searches for"] },
+                    { prompt: "quis?", de: ["who?"] },
+                    { prompt: "reddit", de: ["he gives back", "she gives back", "it gives back"] },
+                    { prompt: "satis", de: ["enough"] },
+                    { prompt: "sed", de: ["but"] },
+                    { prompt: "signum", de: ["sign", "seal"] },
+                    { prompt: "tu", de: ["you"] },
+                    { prompt: "vocat", de: ["he calls", "she calls", "it calls"] }
+                ]
+            },
+            {
+                badge: "Stage 5",
+                title: "Cambridge Latin Book 1 • Stage 5",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "adest", de: ["he is here", "she is here", "it is here"] },
+                    { prompt: "agricola", de: ["farmer"] },
+                    { prompt: "ambulat", de: ["he walks", "she walks", "it walks"] },
+                    { prompt: "audit", de: ["he hears", "she hears", "it hears"] },
+                    { prompt: "clamor", de: ["shout"] },
+                    { prompt: "contendit", de: ["he hurries", "she hurries", "it hurries"] },
+                    { prompt: "currit", de: ["he runs", "she runs", "it runs"] },
+                    { prompt: "fabula", de: ["play", "story"] },
+                    { prompt: "femina", de: ["woman"] },
+                    { prompt: "hodie", de: ["today"] },
+                    { prompt: "iuvenis", de: ["young man"] },
+                    { prompt: "meus", de: ["my"] },
+                    { prompt: "multus", de: ["much", "many"] },
+                    { prompt: "optimus", de: ["best", "very good"] },
+                    { prompt: "petit", de: ["he heads for", "she heads for", "it heads for", "attacks"] },
+                    { prompt: "plaudit", de: ["he applauds", "she applauds", "it applauds"] },
+                    { prompt: "puella", de: ["girl"] },
+                    { prompt: "senex", de: ["old man"] },
+                    { prompt: "spectat", de: ["he watches", "she watches", "it watches"] },
+                    { prompt: "stat", de: ["he stands", "she stands", "it stands"] },
+                    { prompt: "turba", de: ["crowd"] }
+                ]
+            },
+            {
+                badge: "Stage 6",
+                title: "Cambridge Latin Book 1 • Stage 6",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "abest", de: ["he is absent", "she is absent", "it is absent"] },
+                    { prompt: "cubiculum", de: ["bedroom"] },
+                    { prompt: "emit", de: ["he buys", "she buys", "it buys"] },
+                    { prompt: "ferociter", de: ["fiercely"] },
+                    { prompt: "festinat", de: ["he hurries", "she hurries", "it hurries"] },
+                    { prompt: "fortis", de: ["brave"] },
+                    { prompt: "fur", de: ["thief"] },
+                    { prompt: "intente", de: ["intently"] },
+                    { prompt: "libertus", de: ["freedman"] },
+                    { prompt: "olim", de: ["once"] },
+                    { prompt: "parvus", de: ["small"] },
+                    { prompt: "per", de: ["through"] },
+                    { prompt: "postquam", de: ["after"] },
+                    { prompt: "pulsat", de: ["he hits", "she hits", "it hits"] },
+                    { prompt: "quod", de: ["because"] },
+                    { prompt: "res", de: ["thing"] },
+                    { prompt: "scribit", de: ["he writes", "she writes", "it writes"] },
+                    { prompt: "subito", de: ["suddenly"] },
+                    { prompt: "superat", de: ["he overcomes", "she overcomes", "it overcomes"] },
+                    { prompt: "tum", de: ["then"] },
+                    { prompt: "tuus", de: ["your"] }
+                ]
+            },
+            {
+                badge: "Stage 7",
+                title: "Cambridge Latin Book 1 • Stage 7",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "cénat", de: ["he dines", "she dines", "it dines"] },
+                    { prompt: "conspicit", de: ["he catches sight of", "she catches sight of", "it catches sight of"] },
+                    { prompt: "cum", de: ["with"] },
+                    { prompt: "facit", de: ["he makes", "she makes", "it makes", "does"] },
+                    { prompt: "heri", de: ["yesterday"] },
+                    { prompt: "ingens", de: ["huge"] },
+                    { prompt: "intellegit", de: ["he understands", "she understands", "it understands"] },
+                    { prompt: "lacrimat", de: ["he weeps", "she weeps", "it weeps"] },
+                    { prompt: "mortuus", de: ["dead"] },
+                    { prompt: "narrat", de: ["he tells", "she tells", "it tells"] },
+                    { prompt: "necat", de: ["he kills", "she kills", "it kills"] },
+                    { prompt: "nihil", de: ["nothing"] },
+                    { prompt: "omnis", de: ["all"] },
+                    { prompt: "parat", de: ["he prepares", "she prepares", "it prepares"] },
+                    { prompt: "prope", de: ["near"] },
+                    { prompt: "rogat", de: ["he asks", "she asks", "it asks"] },
+                    { prompt: "tacite", de: ["quietly"] },
+                    { prompt: "tamen", de: ["however"] },
+                    { prompt: "terret", de: ["he frightens", "she frightens", "it frightens"] },
+                    { prompt: "valde", de: ["very much"] }
+                ]
+            },
+            {
+                badge: "Stage 8",
+                title: "Cambridge Latin Book 1 • Stage 8",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "agitator", de: ["driver"] },
+                    { prompt: "agitat", de: ["he chases", "she chases", "it chases"] },
+                    { prompt: "consumit", de: ["he consumes", "she consumes", "it consumes", "eats"] },
+                    { prompt: "ducit", de: ["he leads", "she leads", "it leads"] },
+                    { prompt: "eum", de: ["him"] },
+                    { prompt: "facile", de: ["easily"] },
+                    { prompt: "gladius", de: ["sword"] },
+                    { prompt: "habitat", de: ["he lives", "she lives", "it lives"] },
+                    { prompt: "ignavus", de: ["cowardly"] },
+                    { prompt: "incitat", de: ["he urges on", "she urges on", "it urges on"] },
+                    { prompt: "nuntius", de: ["messenger"] },
+                    { prompt: "pes", de: ["foot"] },
+                    { prompt: "porta", de: ["gate"] },
+                    { prompt: "postulat", de: ["he demands", "she demands", "it demands"] },
+                    { prompt: "puer", de: ["boy"] },
+                    { prompt: "pugno", de: ["fight"] },
+                    { prompt: "saepe", de: ["often"] },
+                    { prompt: "sanguis", de: ["blood"] },
+                    { prompt: "spectaculum", de: ["show"] },
+                    { prompt: "totus", de: ["whole"] }
+                ]
+            },
+            {
+                badge: "Stage 9",
+                title: "Cambridge Latin Book 1 • Stage 9",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "accipit", de: ["he accepts", "she accepts", "it accepts"] },
+                    { prompt: "callidus", de: ["clever"] },
+                    { prompt: "contentus", de: ["satisfied"] },
+                    { prompt: "exclamat", de: ["he exclaims", "she exclaims", "it exclaims"] },
+                    { prompt: "frater", de: ["brother"] },
+                    { prompt: "habitat", de: ["he lives", "she lives", "it lives"] },
+                    { prompt: "imperium", de: ["empire"] },
+                    { prompt: "invenit", de: ["he finds", "she finds", "it finds"] },
+                    { prompt: "liber", de: ["book"] },
+                    { prompt: "nos", de: ["we"] },
+                    { prompt: "nuntiat", de: ["he announces", "she announces", "it announces"] },
+                    { prompt: "pax", de: ["peace"] },
+                    { prompt: "portus", de: ["harbour"] },
+                    { prompt: "quam", de: ["than"] },
+                    { prompt: "semper", de: ["always"] },
+                    { prompt: "servat", de: ["he saves", "she saves", "it saves"] },
+                    { prompt: "solus", de: ["alone"] },
+                    { prompt: "suus", de: ["his"] },
+                    { prompt: "tace", de: ["be quiet"] },
+                    { prompt: "vehementer", de: ["violently"] },
+                    { prompt: "vos", de: ["you"] }
+                ]
+            },
+            {
+                badge: "Stage 10",
+                title: "Cambridge Latin Book 1 • Stage 10",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "capit", de: ["he takes", "she takes", "it takes"] },
+                    { prompt: "civis", de: ["citizen"] },
+                    { prompt: "convenit", de: ["he gathers", "she gathers", "it gathers"] },
+                    { prompt: "credit", de: ["he believes", "she believes", "it believes"] },
+                    { prompt: "de", de: ["about"] },
+                    { prompt: "favet", de: ["he supports", "she supports", "it supports"] },
+                    { prompt: "invitat", de: ["he invites", "she invites", "it invites"] },
+                    { prompt: "it", de: ["he goes", "she goes", "it goes"] },
+                    { prompt: "legit", de: ["he reads", "she reads", "it reads"] },
+                    { prompt: "liberalis", de: ["generous"] },
+                    { prompt: "minime!", de: ["no!"] },
+                    { prompt: "murus", de: ["wall"] },
+                    { prompt: "noster", de: ["our"] },
+                    { prompt: "nunc", de: ["now"] },
+                    { prompt: "placet", de: ["it pleases"] },
+                    { prompt: "primus", de: ["first"] },
+                    { prompt: "promittit", de: ["he promises", "she promises", "it promises"] },
+                    { prompt: "pugna", de: ["fight"] },
+                    { prompt: "senator", de: ["senator"] },
+                    { prompt: "sollicitus", de: ["worried"] },
+                    { prompt: "stultus", de: ["stupid"] },
+                    { prompt: "vale!", de: ["goodbye!"] },
+                    { prompt: "verberat", de: ["he beats", "she beats", "it beats"] },
+                    { prompt: "vir", de: ["man"] }
+                ]
+            },
+            {
+                badge: "Stage 11",
+                title: "Cambridge Latin Book 1 • Stage 11",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "amittit", de: ["he loses", "she loses", "it loses"] },
+                    { prompt: "complet", de: ["he fills", "she fills", "it fills"] },
+                    { prompt: "custodit", de: ["he guards", "she guards", "it guards"] },
+                    { prompt: "duo", de: ["two"] },
+                    { prompt: "epistula", de: ["letter"] },
+                    { prompt: "flamma", de: ["flame"] },
+                    { prompt: "fortiter", de: ["bravely"] },
+                    { prompt: "frustra", de: ["in vain"] },
+                    { prompt: "fugit", de: ["he flees", "she flees", "it flees"] },
+                    { prompt: "fundus", de: ["farm"] },
+                    { prompt: "jacet", de: ["he lies", "she lies", "it lies"] },
+                    { prompt: "igitur", de: ["therefore"] },
+                    { prompt: "mirabilis", de: ["strange"] },
+                    { prompt: "mittit", de: ["he sends", "she sends", "it sends"] },
+                    { prompt: "mons", de: ["mountain"] },
+                    { prompt: "optime", de: ["very well"] },
+                    { prompt: "paene", de: ["almost"] },
+                    { prompt: "sentit", de: ["he feels", "she feels", "it feels"] },
+                    { prompt: "tandem", de: ["at last"] },
+                    { prompt: "templum", de: ["templum", "temple"] },
+                    { prompt: "terra", de: ["ground"] },
+                    { prompt: "timet", de: ["he fears", "she fears", "it fears"] },
+                    { prompt: "tres", de: ["three"] }
+                ]
+            },
+            {
+                badge: "Stage 12",
+                title: "Cambridge Latin Book 1 • Stage 12",
+                lang1: "la",
+                lang2: "en-GB",
+                items: [
+                    { prompt: "aedifico", de: ["build"] },
+                    { prompt: "auxilium", de: ["help"] },
+                    { prompt: "consilium", de: ["plan"] },
+                    { prompt: "deinde", de: ["then"] },
+                    { prompt: "igitur", de: ["therefore"] },
+                    { prompt: "mox", de: ["soon"] },
+                    { prompt: "neco", de: ["kill"] },
+                    { prompt: "paratus", de: ["ready"] },
+                    { prompt: "respondeo", de: ["reply"] },
+                    { prompt: "rogo", de: ["ask"] },
+                    { prompt: "terreo", de: ["frighten"] },
+                    { prompt: "valde", de: ["greatly"] }
+                ]
+            }
+        ];
+
+        const ALL_WORLD_LANGUAGES = [
+            {code: 'af-ZA', name: 'Afrikaans (af-ZA)'},
+            {code: 'sq-AL', name: 'Albanian (sq-AL)'},
+            {code: 'ar-SA', name: 'Arabic (ar-SA)'},
+            {code: 'hy-AM', name: 'Armenian (hy-AM)'},
+            {code: 'bn-BD', name: 'Bengali (bn-BD)'},
+            {code: 'bs-BA', name: 'Bosnian (bs-BA)'},
+            {code: 'bg-BG', name: 'Bulgarian (bg-BG)'},
+            {code: 'ca-ES', name: 'Catalan (ca-ES)'},
+            {code: 'zh-CN', name: 'Chinese Simplified (zh-CN)'},
+            {code: 'zh-TW', name: 'Chinese Traditional (zh-TW)'},
+            {code: 'hr-HR', name: 'Croatian (hr-HR)'},
+            {code: 'cs-CZ', name: 'Czech (cs-CZ)'},
+            {code: 'da-DK', name: 'Danish (da-DK)'},
+            {code: 'nl-NL', name: 'Dutch (nl-NL)'},
+            {code: 'en-GB', name: 'English UK (en-GB)'},
+            {code: 'en-US', name: 'English US (en-US)'},
+            {code: 'et-EE', name: 'Estonian (et-EE)'},
+            {code: 'fi-FI', name: 'Finnish (fi-FI)'},
+            {code: 'fr-FR', name: 'French (fr-FR)'},
+            {code: 'gl-ES', name: 'Galician (gl-ES)'},
+            {code: 'de-DE', name: 'German (de-DE)'},
+            {code: 'el-GR', name: 'Greek (el-GR)'},
+            {code: 'gu-IN', name: 'Gujarati (gu-IN)'},
+            {code: 'he-IL', name: 'Hebrew (he-IL)'},
+            {code: 'hi-IN', name: 'Hindi (hi-IN)'},
+            {code: 'hu-HU', name: 'Hungarian (hu-HU)'},
+            {code: 'is-IS', name: 'Icelandic (is-IS)'},
+            {code: 'id-ID', name: 'Indonesian (id-ID)'},
+            {code: 'ga-IE', name: 'Irish (ga-IE)'},
+            {code: 'it-IT', name: 'Italian (it-IT)'},
+            {code: 'ja-JP', name: 'Japanese (ja-JP)'},
+            {code: 'kn-IN', name: 'Kannada (kn-IN)'},
+            {code: 'ko-KR', name: 'Korean (ko-KR)'},
+            {code: 'la', name: 'Latin (la)'},
+            {code: 'lv-LV', name: 'Latvian (lv-LV)'},
+            {code: 'lt-LT', name: 'Lithuanian (lt-LT)'},
+            {code: 'mk-MK', name: 'Macedonian (mk-MK)'},
+            {code: 'ms-MY', name: 'Malay (ms-MY)'},
+            {code: 'mt-MT', name: 'Maltese (mt-MT)'},
+            {code: 'mr-IN', name: 'Marathi (mr-IN)'},
+            {code: 'no-NO', name: 'Norwegian (no-NO)'},
+            {code: 'fa-IR', name: 'Persian (fa-IR)'},
+            {code: 'pl-PL', name: 'Polish (pl-PL)'},
+            {code: 'pt-PT', name: 'Portuguese (pt-PT)'},
+            {code: 'ro-RO', name: 'Romanian (ro-RO)'},
+            {code: 'ru-RU', name: 'Russian (ru-RU)'},
+            {code: 'sr-RS', name: 'Serbian (sr-RS)'},
+            {code: 'sk-SK', name: 'Slovak (sk-SK)'},
+            {code: 'sl-SI', name: 'Slovenian (sl-SI)'},
+            {code: 'es-ES', name: 'Spanish (es-ES)'},
+            {code: 'sw-KE', name: 'Swahili (sw-KE)'},
+            {code: 'sv-SE', name: 'Swedish (sv-SE)'},
+            {code: 'ta-IN', name: 'Tamil (ta-IN)'},
+            {code: 'te-IN', name: 'Telugu (te-IN)'},
+            {code: 'th-TH', name: 'Thai (th-TH)'},
+            {code: 'tr-TR', name: 'Turkish (tr-TR)'},
+            {code: 'uk-UA', name: 'Ukrainian (uk-UA)'},
+            {code: 'ur-PK', name: 'Urdu (ur-PK)'},
+            {code: 'vi-VN', name: 'Vietnamese (vi-VN)'},
+            {code: 'cy-GB', name: 'Welsh (cy-GB)'}
+        ];
+
+        function populateLanguageDropdowns() {
+            filterLanguageDropdown(1, '');
+            filterLanguageDropdown(2, '');
+        }
+
+        function filterLanguageDropdown(side, query) {
+            const selectEl = document.getElementById(`importLangSelect${side}`);
+            const onlyActive = document.getElementById(`langFilterOnlyActive${side}`).checked;
+            const q = query.toLowerCase();
+
+            selectEl.innerHTML = '';
+            ALL_WORLD_LANGUAGES.forEach(lang => {
+                const matchName = lang.name.toLowerCase().includes(q);
+                if (!onlyActive || matchName) {
+                    const opt = document.createElement('option');
+                    opt.value = lang.code;
+                    opt.textContent = lang.name;
+                    if (side === 1 && lang.code === 'en-GB') opt.selected = true;
+                    if (side === 2 && lang.code === 'de-DE') opt.selected = true;
+                    selectEl.appendChild(opt);
+                }
+            });
+        }
+
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                lastFocusedInput = e.target;
+            }
+        });
+
+        function insertChar(char) {
+            if (!lastFocusedInput) {
+                const activePage = document.querySelector('.page-screen.active');
+                if (activePage) {
+                    lastFocusedInput = activePage.querySelector('input[type="text"]');
+                }
+            }
+            if (lastFocusedInput) {
+                const start = lastFocusedInput.selectionStart;
+                const end = lastFocusedInput.selectionEnd;
+                const val = lastFocusedInput.value;
+                lastFocusedInput.value = val.substring(0, start) + char + val.substring(end);
+                lastFocusedInput.focus();
+                lastFocusedInput.setSelectionRange(start + char.length, start + char.length);
+            }
+        }
+
+        function speakText(text, sideNum = 1) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            
+            let unit = getActiveUnit();
+            let langCode = 'en-US';
+            if (unit) {
+                if (sideNum === 1) langCode = unit.lang1 || (activeLang === 'german' ? 'en-GB' : 'la');
+                else langCode = unit.lang2 || (activeLang === 'german' ? 'de-DE' : 'en-GB');
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = langCode;
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.startsWith(langCode.substring(0,2)) && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Victoria')));
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playMusicNote() {
+            if (!audioCtx || !isMusicPlaying || currentTrack === 'off') return;
+            const now = audioCtx.currentTime;
+
+            if (currentTrack === 'synthwave') {
+                const osc = audioCtx.createOscillator();
+                const filter = audioCtx.createBiquadFilter();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(500, now);
+                const freqs = [110, 110, 130.81, 146.83];
+                const note = freqs[Math.floor((now * 4) % freqs.length)];
+                osc.frequency.setValueAtTime(note, now);
+                gain.gain.setValueAtTime(musicVolume * 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } else if (currentTrack === 'study' || currentTrack === 'piano') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                const notes = [261.63, 329.63, 392.00, 440.00, 523.25];
+                const note = notes[Math.floor((now * 1.5) % notes.length)];
+                osc.frequency.setValueAtTime(note, now);
+                gain.gain.setValueAtTime(musicVolume * 0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.52);
+            } else if (currentTrack === 'chiptune' || currentTrack === 'arcade') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                const notes = [220.00, 277.18, 329.63, 440.00, 554.37];
+                const note = notes[Math.floor((now * 8) % notes.length)];
+                osc.frequency.setValueAtTime(note, now);
+                gain.gain.setValueAtTime(musicVolume * 0.15, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (currentTrack === 'quest' || currentTrack === 'lofi') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                const notes = [196.00, 261.63, 293.66, 329.63];
+                const note = notes[Math.floor((now * 2) % notes.length)];
+                osc.frequency.setValueAtTime(note, now);
+                gain.gain.setValueAtTime(musicVolume * 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.38);
+            }
+        }
+
+        function startMusicLoop() {
+            if (musicTimer) clearInterval(musicTimer);
+            isMusicPlaying = true;
+            document.getElementById('bgmPlayToggleBtn').textContent = 'PAUSE';
+            document.getElementById('bgmPlayToggleBtn').className = 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-2 py-0.5 rounded-lg text-[10px] transition-colors cursor-pointer';
+            musicTimer = setInterval(playMusicNote, 220);
+        }
+
+        function stopMusicLoop() {
+            isMusicPlaying = false;
+            if (musicTimer) clearInterval(musicTimer);
+            document.getElementById('bgmPlayToggleBtn').textContent = 'PLAY';
+            document.getElementById('bgmPlayToggleBtn').className = 'bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-2 py-0.5 rounded-lg text-[10px] transition-colors cursor-pointer';
+        }
+
+        function toggleMusicPlay() {
+            initAudio();
+            if (isMusicPlaying) stopMusicLoop();
+            else {
+                if (currentTrack === 'off') {
+                    currentTrack = 'synthwave';
+                    document.getElementById('bgmSelect').value = 'synthwave';
+                }
+                startMusicLoop();
+            }
+        }
+
+        function changeMusicTrack(track) {
+            initAudio();
+            currentTrack = track;
+            if (track === 'off') stopMusicLoop();
+            else startMusicLoop();
+        }
+
+        function updateMusicVolume(val) { musicVolume = parseFloat(val); }
+
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'error') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(160, now + 0.1);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch(e){}
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audioBtn').textContent = audioEnabled ? 'Sound On' : 'Sound Off';
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.page-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const accentBar = document.getElementById('germanAccentBar');
+            if (screenId === 'quizScreen' && activeLang === 'german') {
+                accentBar.classList.remove('hidden');
+            } else {
+                accentBar.classList.add('hidden');
+            }
+        }
+
+        function showSignInForm() {
+            initAudio();
+            playSound('click');
+            document.getElementById('authInitialButtons').classList.add('hidden');
+            document.getElementById('signInForm').classList.remove('hidden');
+            document.getElementById('signUpForm').classList.add('hidden');
+            document.getElementById('authErrorMsg').classList.add('hidden');
+        }
+
+        function showSignUpForm() {
+            initAudio();
+            playSound('click');
+            document.getElementById('authInitialButtons').classList.add('hidden');
+            document.getElementById('signUpForm').classList.remove('hidden');
+            document.getElementById('signInForm').classList.add('hidden');
+            document.getElementById('authErrorMsg').classList.add('hidden');
+        }
+
+        function hideAuthForms() {
+            playSound('click');
+            document.getElementById('authInitialButtons').classList.remove('hidden');
+            document.getElementById('signInForm').classList.add('hidden');
+            document.getElementById('signUpForm').classList.add('hidden');
+            document.getElementById('authErrorMsg').classList.add('hidden');
+        }
+
+        function handleSignUp(e) {
+            e.preventDefault();
+            const realName = document.getElementById('regRealName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const inviteCode = document.getElementById('regInviteCode').value.trim();
+            const errorEl = document.getElementById('authErrorMsg');
+
+            if (!availableInviteCodes.includes(inviteCode)) {
+                errorEl.textContent = 'Invalid or already used single-use invite code!';
+                errorEl.classList.remove('hidden');
+                playSound('error');
+                return;
+            }
+
+            if (accounts.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+                errorEl.textContent = 'Username already exists! Please pick another.';
+                errorEl.classList.remove('hidden');
+                playSound('error');
+                return;
+            }
+
+            availableInviteCodes = availableInviteCodes.filter(c => c !== inviteCode);
+            saveInviteCodes();
+
+            const newUser = {
+                realName: realName,
+                username: username,
+                passwordHash: password,
+                isAdmin: false,
+                customSets: [],
+                xp: 0,
+                streak: 0,
+                lastQuestDate: null,
+                trophies: [],
+                notificationShown: false
+            };
+
+            accounts.push(newUser);
+            saveAccountsToStorage();
+            loginUserSession(newUser);
+        }
+
+        function handleSignIn(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorEl = document.getElementById('authErrorMsg');
+
+            const found = accounts.find(a => a.username.toLowerCase() === username.toLowerCase() && a.passwordHash === password);
+
+            if (!found) {
+                errorEl.textContent = 'Invalid username or password!';
+                errorEl.classList.remove('hidden');
+                playSound('error');
+                return;
+            }
+
+            if (rememberMe) {
+                const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+                localStorage.setItem('quest_remembered_session', JSON.stringify({ username: found.username, expiry: expiry }));
+            } else {
+                localStorage.removeItem('quest_remembered_session');
+            }
+
+            loginUserSession(found);
+        }
+
+        function loginUserSession(user) {
+            currentUser = user;
+            playSound('correct');
+
+            if (!isMusicPlaying && currentTrack !== 'off') {
+                startMusicLoop();
+            }
+
+            const actionsDiv = document.getElementById('authHeaderActions');
+            actionsDiv.innerHTML = '';
+
+            if (currentUser.isAdmin) {
+                const adminBtn = document.createElement('button');
+                adminBtn.type = 'button';
+                adminBtn.onclick = openAdminPanel;
+                adminBtn.className = 'px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl cursor-pointer';
+                adminBtn.textContent = 'Admin Panel';
+                actionsDiv.appendChild(adminBtn);
+            }
+
+            const logoutBtn = document.createElement('button');
+            logoutBtn.type = 'button';
+            logoutBtn.onclick = logoutUserSession;
+            logoutBtn.className = 'px-2 py-1 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold text-xs rounded-xl cursor-pointer transition-colors';
+            logoutBtn.textContent = 'Logout';
+            actionsDiv.appendChild(logoutBtn);
+
+            document.getElementById('footerUserLabel').textContent = `User: ${currentUser.username} (${currentUser.realName})`;
+
+            document.getElementById('greetingTitle').textContent = `Hello, ${currentUser.realName}!`;
+            showScreen('pageGreeting');
+
+            setTimeout(() => { document.getElementById('greetingBar').style.width = '100%'; }, 100);
+
+            setTimeout(() => {
+                buildGermanUnitsGrid();
+                buildLatinUnitsGrid();
+                renderCustomSets();
+                renderTrophies();
+                updateTrackerUI();
+                document.getElementById('landingStudentName').textContent = currentUser.realName;
+                showScreen('landingPage');
+                document.getElementById('subHeaderProgress').textContent = 'Mission Control • Select Study Module';
+                document.getElementById('navControls').classList.add('hidden');
+
+                if (!currentUser.notificationShown) {
+                    document.getElementById('notificationPopupModal').classList.remove('hidden');
+                }
+            }, 1400);
+        }
+
+        function logoutUserSession() {
+            playSound('click');
+            currentUser = null;
+            localStorage.removeItem('quest_remembered_session');
+            document.getElementById('authHeaderActions').innerHTML = '';
+            document.getElementById('footerUserLabel').textContent = 'Not Signed In';
+            hideAuthForms();
+            showScreen('authScreen');
+            history.pushState(null, '', location.href);
+            window.onpopstate = function () {
+                history.go(1);
+            };
+        }
+
+        function forgotPasswordAlert() {
+            alert("Forgot your password? Please contact the administrator (Rufus_Admin) to reset your account password.");
+        }
+
+        function checkRememberedSession() {
+            try {
+                const savedSession = localStorage.getItem('quest_remembered_session');
+                if (savedSession) {
+                    const parsed = JSON.parse(savedSession);
+                    if (parsed.expiry > Date.now()) {
+                        const found = accounts.find(a => a.username === parsed.username);
+                        if (found) {
+                            loginUserSession(found);
+                            return;
+                        }
+                    }
+                }
+            } catch(e){}
+            showScreen('authScreen');
+        }
+
+        function openAdminPanel() {
+            if (!currentUser || !currentUser.isAdmin) return;
+            playSound('click');
+            renderAdminUserList();
+            showScreen('adminScreen');
+        }
+
+        function renderAdminUserList() {
+            const container = document.getElementById('adminUsersList');
+            container.innerHTML = '';
+
+            accounts.forEach((acc) => {
+                const row = document.createElement('div');
+                row.className = 'bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between gap-3';
+                row.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-black text-white">${acc.realName}</span>
+                            <span class="text-xs bg-indigo-950 text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-800">@${acc.username}</span>
+                            ${acc.isAdmin ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/40 uppercase">Admin</span>' : ''}
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">XP: ${acc.xp || 0} • Streak: ${acc.streak || 0} days • Custom Sets: ${(acc.customSets || []).length}</p>
+                    </div>
+                    ${!acc.isAdmin ? `
+                        <button type="button" onclick="deleteAccountByAdmin('${acc.username}')" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                            Delete Account
+                        </button>
+                    ` : '<span class="text-xs text-slate-500 italic">Protected</span>'}
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function deleteAccountByAdmin(username) {
+            if (confirm(`Are you sure you want to permanently delete the account @${username}?`)) {
+                accounts = accounts.filter(a => a.username !== username);
+                saveAccountsToStorage();
+                renderAdminUserList();
+                playSound('correct');
+            }
+        }
+
+        function registerQuestCompletion(earnedXP) {
+            if (!currentUser) return;
+
+            currentUser.xp = (currentUser.xp || 0) + earnedXP;
+
+            const today = new Date().toDateString();
+            if (currentUser.lastQuestDate !== today) {
+                const yesterday = new Date(Date.now() - 86400000).toDateString();
+                if (currentUser.lastQuestDate === yesterday) {
+                    currentUser.streak = (currentUser.streak || 0) + 1;
+                } else {
+                    currentUser.streak = 1;
+                }
+                currentUser.lastQuestDate = today;
+            }
+
+            checkAndUnlockTrophies();
+            saveAccountsToStorage();
+            updateTrackerUI();
+        }
+
+        function updateTrackerUI() {
+            if (!currentUser) return;
+            document.getElementById('streakCount').textContent = currentUser.streak || 0;
+            document.getElementById('xpCount').textContent = currentUser.xp || 0;
+        }
+
+        const ALL_TROPHIES = [
+            { id: 'first_quest', title: 'First Steps', desc: 'Complete your 1st quest challenge', icon: '🚀' },
+            { id: 'vocab_master', title: 'Vocab Master', desc: 'Earn 100+ Total XP', icon: '🧠' },
+            { id: 'streak_3', title: 'On Fire', desc: 'Reach a 3-day quest streak', icon: '🔥' },
+            { id: 'speed_demon', title: 'Speed Demon', desc: 'Finish a quiz in under 45s', icon: '⚡' }
+        ];
+
+        function checkAndUnlockTrophies(completionTimeSec = 999) {
+            if (!currentUser) return;
+            if (!currentUser.trophies) currentUser.trophies = [];
+
+            if (!currentUser.trophies.includes('first_quest')) currentUser.trophies.push('first_quest');
+            if (currentUser.xp >= 100 && !currentUser.trophies.includes('vocab_master')) currentUser.trophies.push('vocab_master');
+            if (currentUser.streak >= 3 && !currentUser.trophies.includes('streak_3')) currentUser.trophies.push('streak_3');
+            if (completionTimeSec <= 45 && !currentUser.trophies.includes('speed_demon')) currentUser.trophies.push('speed_demon');
+
+            renderTrophies();
+        }
+
+        function renderTrophies() {
+            const grid = document.getElementById('trophyGrid');
+            grid.innerHTML = '';
+            const userUnlocked = currentUser ? (currentUser.trophies || []) : [];
+
+            document.getElementById('trophyProgressText').textContent = `${userUnlocked.length} / ${ALL_TROPHIES.length} Unlocked`;
+
+            ALL_TROPHIES.forEach(t => {
+                const unlocked = userUnlocked.includes(t.id);
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-xl border flex flex-col items-center justify-center ${unlocked ? 'bg-indigo-950/60 border-amber-400/60 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-600 opacity-50'}`;
+                card.innerHTML = `
+                    <span class="text-2xl mb-1">${t.icon}</span>
+                    <span class="text-[11px] font-black uppercase leading-tight">${t.title}</span>
+                    <span class="text-[9px] font-medium leading-tight text-slate-400 mt-0.5">${t.desc}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function enableNotifications() {
+            playSound('correct');
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('Notifications active! We will help you keep your daily streak alive.');
+                    }
+                });
+            }
+            closeNotificationPopup();
+        }
+
+        function closeNotificationPopup() {
+            playSound('click');
+            if (currentUser) {
+                currentUser.notificationShown = true;
+                saveAccountsToStorage();
+            }
+            document.getElementById('notificationPopupModal').classList.add('hidden');
+        }
+
+        function switchLangTab(lang) {
+            playSound('click');
+            activeLang = lang;
+            const germanBtn = document.getElementById('germanTabBtn');
+            const latinBtn = document.getElementById('latinTabBtn');
+            const customBtn = document.getElementById('customTabBtn');
+
+            const germanGrid = document.getElementById('germanUnitsGrid');
+            const latinGrid = document.getElementById('latinUnitsGrid');
+            const customGrid = document.getElementById('customUnitsGrid');
+
+            germanBtn.className = 'px-5 py-3 bg-slate-800 text-slate-300 font-black text-xs sm:text-sm rounded-2xl transition-all cursor-pointer border-2 border-transparent';
+            latinBtn.className = 'px-5 py-3 bg-slate-800 text-slate-300 font-black text-xs sm:text-sm rounded-2xl transition-all cursor-pointer border-2 border-transparent';
+            customBtn.className = 'px-5 py-3 bg-slate-800 text-amber-300 hover:bg-slate-700 font-black text-xs sm:text-sm rounded-2xl transition-all cursor-pointer border-2 border-transparent';
+
+            germanGrid.classList.add('hidden');
+            latinGrid.classList.add('hidden');
+            customGrid.classList.add('hidden');
+
+            if (lang === 'german') {
+                germanBtn.className = 'px-5 py-3 bg-indigo-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all cursor-pointer transform hover:scale-105 border-2 border-indigo-400';
+                germanGrid.classList.remove('hidden');
+            } else if (lang === 'latin') {
+                latinBtn.className = 'px-5 py-3 bg-indigo-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all cursor-pointer transform hover:scale-105 border-2 border-indigo-400';
+                latinGrid.classList.remove('hidden');
+            } else if (lang === 'custom') {
+                customBtn.className = 'px-5 py-3 bg-indigo-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all cursor-pointer transform hover:scale-105 border-2 border-amber-400';
+                customGrid.classList.remove('hidden');
+                populateLanguageDropdowns();
+
+                if (!localStorage.getItem('quest_hide_storage_warning')) {
+                    document.getElementById('downloadWarningModal').classList.remove('hidden');
+                }
+            }
+        }
+
+        function closeDownloadWarning() {
+            playSound('click');
+            if (document.getElementById('dontShowStorageWarning').checked) {
+                localStorage.setItem('quest_hide_storage_warning', 'true');
+            }
+            document.getElementById('downloadWarningModal').classList.add('hidden');
+        }
+
+        function buildGermanUnitsGrid() {
+            const germanGrid = document.getElementById('germanUnitsGrid');
+            germanGrid.innerHTML = '';
+            GERMAN_UNITS.forEach((unit, index) => {
+                const div = document.createElement('div');
+                div.className = 'card-hover p-5 bg-slate-950/90 border-2 border-slate-800 hover:border-amber-400 rounded-2xl flex flex-col justify-between';
+                div.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-black text-amber-400 uppercase tracking-wider">${unit.badge}</span>
+                            <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/30 font-bold">${unit.items.length} items</span>
+                        </div>
+                        <h3 class="text-lg font-extrabold text-white">${unit.title}</h3>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button type="button" onclick="openModeSelector('german', ${index})" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl transition-colors cursor-pointer shadow-md">Study Module</button>
+                    </div>
+                `;
+                germanGrid.appendChild(div);
+            });
+        }
+
+        function buildLatinUnitsGrid() {
+            const latinGrid = document.getElementById('latinUnitsGrid');
+            latinGrid.innerHTML = '';
+            LATIN_UNITS.forEach((unit, index) => {
+                const div = document.createElement('div');
+                div.className = 'card-hover p-4 bg-slate-950/90 border-2 border-slate-800 hover:border-amber-400 rounded-2xl flex flex-col justify-between';
+                div.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider">${unit.badge}</span>
+                            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-bold">Book 1</span>
+                        </div>
+                        <h3 class="text-sm font-extrabold text-white">Stage ${index + 1} Arena</h3>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button type="button" onclick="openModeSelector('latin', ${index})" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl transition-colors cursor-pointer">Study Module</button>
+                    </div>
+                `;
+                latinGrid.appendChild(div);
+            });
+        }
+
+        function processCustomImport() {
+            if (!currentUser) return;
+            playSound('click');
+            const titleInput = document.getElementById('importTitle');
+            const dataInput = document.getElementById('importData');
+            const separatorSelect = document.getElementById('separatorSelect');
+            const langSelect1 = document.getElementById('importLangSelect1');
+            const langSelect2 = document.getElementById('importLangSelect2');
+            const errorEl = document.getElementById('importError');
+
+            const title = titleInput.value.trim();
+            const rawText = dataInput.value.trim();
+            const sepType = separatorSelect.value;
+            const chosenLang1 = langSelect1.value || 'en-GB';
+            const chosenLang2 = langSelect2.value || 'de-DE';
+
+            if (!title || !rawText) {
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            errorEl.classList.add('hidden');
+
+            let separator = ' ';
+            if (sepType === 'dash') separator = '-';
+            else if (sepType === 'comma') separator = ',';
+            else if (sepType === 'tab') separator = '\t';
+            else if (sepType === 'colon') separator = ':';
+
+            const lines = rawText.split('\n');
+            const items = [];
+
+            lines.forEach(line => {
+                const parts = line.split(separator);
+                if (parts.length >= 2) {
+                    let partA = parts[0].trim();
+                    let partB = parts.slice(1).join(' ').trim();
+                    if (partA && partB) {
+                        items.push({ prompt: partA, de: [partB] });
+                    }
+                }
+            });
+
+            if (items.length === 0) {
+                errorEl.textContent = 'Could not parse terms! Check your separator setting.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (!currentUser.customSets) currentUser.customSets = [];
+            currentUser.customSets.push({
+                badge: "Custom Set",
+                title: title,
+                lang1: chosenLang1,
+                lang2: chosenLang2,
+                items: items,
+                isReversed: false
+            });
+
+            saveAccountsToStorage();
+            titleInput.value = '';
+            dataInput.value = '';
+            renderCustomSets();
+            playSound('correct');
+        }
+
+        function renderCustomSets() {
+            const container = document.getElementById('savedCustomSetsContainer');
+            container.innerHTML = '';
+            const userSets = currentUser ? (currentUser.customSets || []) : [];
+
+            if (userSets.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No custom sets saved yet. Create or upload one above!</p>`;
+                return;
+            }
+
+            userSets.forEach((set, index) => {
+                const div = document.createElement('div');
+                div.className = 'card-hover p-4 bg-slate-950 border-2 border-slate-800 hover:border-amber-400 rounded-2xl flex items-center justify-between gap-3 flex-wrap';
+                div.innerHTML = `
+                    <div>
+                        <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider">Custom Set [${set.lang1 || 'en'} ⇄ ${set.lang2 || 'de'}]</span>
+                        <h4 class="text-sm font-extrabold text-white mt-0.5">${set.title}</h4>
+                        <span class="text-[11px] text-slate-400 font-medium">${set.items.length} items saved</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="downloadSingleCustomSet(${index})" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 font-black text-xs rounded-xl transition-colors cursor-pointer">
+                            Download
+                        </button>
+                        <button type="button" onclick="openEditCustomSet(${index})" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-black text-xs rounded-xl transition-colors cursor-pointer">
+                            Edit
+                        </button>
+                        <button type="button" onclick="deleteCustomSet(${index})" class="px-3 py-2 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-black text-xs rounded-xl transition-colors cursor-pointer">
+                            Delete
+                        </button>
+                        <button type="button" onclick="openModeSelector('custom', ${index})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl transition-colors cursor-pointer">
+                            Study
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteCustomSet(index) {
+            if (confirm("Are you sure you want to delete this custom set?")) {
+                playSound('click');
+                currentUser.customSets.splice(index, 1);
+                saveAccountsToStorage();
+                renderCustomSets();
+            }
+        }
+
+        function deleteActiveCustomSet() {
+            if (activeCustomSet !== null && activeCustomSet !== undefined) {
+                if (confirm("Are you sure you want to permanently delete this custom set?")) {
+                    playSound('click');
+                    currentUser.customSets.splice(activeCustomSet, 1);
+                    saveAccountsToStorage();
+                    renderCustomSets();
+                    returnToLanding();
+                }
+            }
+        }
+
+        function downloadSingleCustomSet(index) {
+            playSound('click');
+            const set = currentUser.customSets[index];
+            if (!set) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(set, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `${set.title.replace(/\s+/g, '_')}_set.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function loadCustomSetFromFile(event) {
+            const file = event.target.files[0];
+            if (!file || !currentUser) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!currentUser.customSets) currentUser.customSets = [];
+                    if (Array.isArray(parsed)) {
+                        currentUser.customSets = currentUser.customSets.concat(parsed);
+                    } else if (parsed && parsed.title && parsed.items) {
+                        currentUser.customSets.push(parsed);
+                    }
+                    saveAccountsToStorage();
+                    renderCustomSets();
+                    playSound('correct');
+                } catch(err) {
+                    alert('Error reading JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openEditCustomSet(index) {
+            playSound('click');
+            activeCustomSet = index;
+            const set = currentUser.customSets[index];
+            document.getElementById('editSetTitleHeader').textContent = `Edit Set: ${set.title}`;
+            updateReverseButtonUI();
+            renderEditFlashcardsList();
+            showScreen('editCustomScreen');
+        }
+
+        function toggleReverseEditSet() {
+            playSound('click');
+            const set = currentUser.customSets[activeCustomSet];
+            set.isReversed = !set.isReversed;
+            updateReverseButtonUI();
+        }
+
+        function updateReverseButtonUI() {
+            const set = currentUser.customSets[activeCustomSet];
+            const btn = document.getElementById('reverseEditBtn');
+            if (set.isReversed) {
+                btn.className = 'flex-1 py-3 bg-amber-500/20 border-2 border-amber-400 text-amber-300 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2';
+                btn.innerHTML = `Flip Question & Answer (Currently: Reversed B → A) <strong class="ml-auto text-amber-400">ACTIVE</strong>`;
+            } else {
+                btn.className = 'flex-1 py-3 bg-slate-950 border-2 border-slate-800 hover:border-amber-400 text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2';
+                btn.innerHTML = `Flip Question & Answer (Currently: Normal A → B)`;
+            }
+        }
+
+        function renderEditFlashcardsList() {
+            const set = currentUser.customSets[activeCustomSet];
+            const container = document.getElementById('editFlashcardsListContainer');
+            container.innerHTML = '';
+
+            set.items.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800';
+                row.innerHTML = `
+                    <span class="text-xs font-bold text-amber-400 w-6 text-center">#${idx+1}</span>
+                    <input type="text" value="${item.prompt}" id="edit_prompt_${idx}" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs font-bold outline-none focus:border-amber-400" placeholder="Question">
+                    <input type="text" value="${item.de[0]}" id="edit_ans_${idx}" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-amber-300 text-xs font-bold outline-none focus:border-amber-400" placeholder="Answer">
+                    <button type="button" onclick="deleteFlashcardRow(${idx})" class="p-2 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-lg text-xs font-black transition-colors cursor-pointer">Delete</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addNewFlashcardRow() {
+            playSound('click');
+            const set = currentUser.customSets[activeCustomSet];
+            set.items.push({ prompt: "New Term", de: ["New Definition"] });
+            renderEditFlashcardsList();
+        }
+
+        function deleteFlashcardRow(idx) {
+            playSound('click');
+            const set = currentUser.customSets[activeCustomSet];
+            set.items.splice(idx, 1);
+            renderEditFlashcardsList();
+        }
+
+        function saveEditedCustomSet() {
+            playSound('correct');
+            const set = currentUser.customSets[activeCustomSet];
+            
+            const updatedItems = [];
+            set.items.forEach((item, idx) => {
+                const pEl = document.getElementById(`edit_prompt_${idx}`);
+                const aEl = document.getElementById(`edit_ans_${idx}`);
+                if (pEl && aEl) {
+                    let p = pEl.value.trim();
+                    let a = aEl.value.trim();
+                    if (p && a) {
+                        updatedItems.push({
+                            prompt: set.isReversed ? a : p,
+                            de: [set.isReversed ? p : a]
+                        });
+                    }
+                }
+            });
+
+            set.items = updatedItems;
+            saveAccountsToStorage();
+            renderCustomSets();
+            returnToLanding();
+        }
+
+        function returnToLanding() {
+            playSound('click');
+            showScreen('landingPage');
+            document.getElementById('navControls').classList.add('hidden');
+            document.getElementById('subHeaderProgress').textContent = 'Mission Control • Select Study Module';
+            document.getElementById('subHeaderBadge').textContent = 'Arena';
+        }
+
+        function openModeSelector(lang, index) {
+            playSound('click');
+            activeLang = lang;
+            if (lang === 'german') activeUnitIndex = index;
+            else if (lang === 'latin') activeUnitIndex = index;
+            else if (lang === 'custom') activeCustomSet = index;
+
+            let unit = getActiveUnit();
+            document.getElementById('modeSelectorTitle').textContent = unit.title;
+            showScreen('modeSelectorScreen');
+        }
+
+        function getActiveUnit() {
+            if (activeLang === 'german') return GERMAN_UNITS[activeUnitIndex];
+            if (activeLang === 'latin') return LATIN_UNITS[activeUnitIndex];
+            return currentUser.customSets[activeCustomSet];
+        }
+
+        function startFlashcardsMode(customItemList = null) {
+            playSound('click');
+            const unit = getActiveUnit();
+            currentFlashcards = customItemList || unit.items;
+            currentFlashcardIndex = 0;
+            isFlashcardFlipped = false;
+
+            document.getElementById('fcBadge').textContent = `${activeLang.toUpperCase()} • ${unit.badge}`;
+            document.getElementById('fcTitle').textContent = unit.title;
+            updateFlashcardDisplay();
+            showScreen('flashcardScreen');
+        }
+
+        function updateFlashcardDisplay() {
+            const item = currentFlashcards[currentFlashcardIndex];
+            document.getElementById('fcFrontText').textContent = item.prompt;
+            document.getElementById('fcBackText').textContent = item.de[0];
+            document.getElementById('fcCounter').textContent = `${currentFlashcardIndex + 1} / ${currentFlashcards.length}`;
+            
+            const inner = document.getElementById('flashcardInner');
+            isFlashcardFlipped = false;
+            inner.style.transform = 'rotateY(0deg)';
+        }
+
+        function flipFlashcard() {
+            playSound('click');
+            isFlashcardFlipped = !isFlashcardFlipped;
+            const inner = document.getElementById('flashcardInner');
+            inner.style.transform = isFlashcardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+        }
+
+        function nextFlashcard() {
+            playSound('click');
+            currentFlashcardIndex = (currentFlashcardIndex + 1) % currentFlashcards.length;
+            updateFlashcardDisplay();
+        }
+
+        function prevFlashcard() {
+            playSound('click');
+            currentFlashcardIndex = (currentFlashcardIndex - 1 + currentFlashcards.length) % currentFlashcards.length;
+            updateFlashcardDisplay();
+        }
+
+        function startMultipleChoiceMode() {
+            playSound('click');
+            const unit = getActiveUnit();
+            quizStartTime = Date.now();
+            mcQuestions = unit.items;
+            mcIndex = 0;
+            mcUserScore = 0;
+            mcUserAnswers = [];
+            missedWordsList = [];
+
+            document.getElementById('mcBadge').textContent = `${activeLang.toUpperCase()} • ${unit.badge}`;
+            document.getElementById('mcTitle').textContent = unit.title;
+            renderMCOptionQuestion();
+            showScreen('mcQuizScreen');
+        }
+
+        function renderMCOptionQuestion() {
+            const q = mcQuestions[mcIndex];
+            document.getElementById('mcCounter').textContent = `${mcIndex + 1} / ${mcQuestions.length}`;
+            document.getElementById('mcPromptText').textContent = q.prompt;
+
+            const correctAnswer = q.de[0];
+
+            let pool = [];
+            if (activeLang === 'german') {
+                GERMAN_UNITS.forEach(u => u.items.forEach(i => pool.push(i.de[0])));
+            } else if (activeLang === 'latin') {
+                LATIN_UNITS.forEach(u => u.items.forEach(i => pool.push(i.de[0])));
+            } else if (activeLang === 'custom' && currentUser && currentUser.customSets) {
+                currentUser.customSets.forEach(s => s.items.forEach(i => pool.push(i.de[0])));
+            }
+
+            const fallbackDistractors = [
+                'Alternative Meaning A', 'Alternative Meaning B', 'Alternative Meaning C', 'Alternative Meaning D',
+                'Secondary Concept', 'Alternate Term', 'Additional Definition', 'Sample Option'
+            ];
+            fallbackDistractors.forEach(d => pool.push(d));
+
+            pool = pool.filter(ans => ans.toLowerCase() !== correctAnswer.toLowerCase());
+            pool.sort(() => 0.5 - Math.random());
+
+            let options = [correctAnswer, pool[0] || 'Option A', pool[1] || 'Option B', pool[2] || 'Option C'];
+            options.sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('mcOptionsContainer');
+            container.innerHTML = '';
+
+            const optionLabels = ['A', 'B', 'C', 'D'];
+            options.forEach((optText, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectMCOption(optText, correctAnswer, q);
+                btn.className = 'p-4 bg-slate-950 border-2 border-slate-800 hover:border-amber-400 rounded-2xl font-bold text-left text-sm text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-3';
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-amber-400 text-xs">${optionLabels[i]}</span>
+                    <span class="flex-1">${optText}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function selectMCOption(selectedOpt, correctOpt, questionObj) {
+            const isCorrect = selectedOpt.toLowerCase() === correctOpt.toLowerCase();
+            if (isCorrect) {
+                playSound('correct');
+                mcUserScore++;
+            } else {
+                playSound('error');
+                missedWordsList.push(questionObj);
+            }
+
+            mcUserAnswers.push({
+                prompt: questionObj.prompt,
+                userAns: selectedOpt,
+                correctAns: correctOpt,
+                isCorrect: isCorrect
+            });
+
+            mcIndex++;
+            if (mcIndex < mcQuestions.length) {
+                renderMCOptionQuestion();
+            } else {
+                finishMCQuiz();
+            }
+        }
+
+        function finishMCQuiz() {
+            const total = mcQuestions.length;
+            const scorePercent = Math.round((mcUserScore / total) * 100);
+            const durationSec = Math.round((Date.now() - quizStartTime) / 1000);
+
+            registerQuestCompletion(mcUserScore * 10);
+            checkAndUnlockTrophies(durationSec);
+
+            document.getElementById('congratsHeader').textContent = `Arcade Challenge Completed!`;
+            document.getElementById('finalScorePercent').textContent = `${scorePercent}%`;
+            document.getElementById('finalScoreMarks').textContent = `${mcUserScore} / ${total} Marks`;
+
+            let rank = 'LANGUAGE LEGEND';
+            if (scorePercent < 50) rank = 'ROOKIE';
+            else if (scorePercent < 80) rank = 'PRO SKILLER';
+
+            document.getElementById('rankBadge').textContent = rank;
+
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            mcUserAnswers.forEach((ans) => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 ${ans.isCorrect ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-rose-950/30 border-rose-500/50'}`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <span class="text-xs font-bold text-slate-400">Term: <strong class="text-amber-300">${ans.prompt}</strong></span>
+                        <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full ${ans.isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
+                            ${ans.isCorrect ? 'Correct +10 XP' : 'Incorrect'}
+                        </span>
+                    </div>
+                    <div class="text-xs font-bold mb-1">
+                        <span class="text-slate-500 uppercase">Your Pick:</span>
+                        <span class="${ans.isCorrect ? 'text-emerald-400' : 'text-rose-400'} ml-1">${ans.userAns}</span>
+                    </div>
+                    ${!ans.isCorrect ? `
+                        <div class="text-xs font-bold mb-2">
+                            <span class="text-slate-500 uppercase">Exact Answer Explanation:</span>
+                            <span class="text-amber-300 ml-1">${ans.correctAns}</span>
+                        </div>
+                    ` : ''}
+                `;
+                resultsList.appendChild(card);
+            });
+
+            const reviewBtn = document.getElementById('reviewMissedBtn');
+            if (missedWordsList.length > 0) reviewBtn.classList.remove('hidden');
+            else reviewBtn.classList.add('hidden');
+
+            showScreen('resultsScreen');
+            playSound('fanfare');
+            if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+        }
+
+        function startQuizMode() {
+            playSound('click');
+            const unit = getActiveUnit();
+            quizStartTime = Date.now();
+            missedWordsList = [];
+
+            document.getElementById('quizUnitBadge').textContent = `${activeLang.toUpperCase()} • ${unit.badge}`;
+            document.getElementById('quizUnitTitle').textContent = unit.title;
+            document.getElementById('quizPromptSubtitle').textContent = activeLang === 'latin' ? 'Note: Latin verb translations require "he", "she", or "it" in front.' : 'Provide exact answers.';
+            document.getElementById('subHeaderBadge').textContent = unit.badge;
+            document.getElementById('subHeaderProgress').textContent = `${unit.badge} • ${unit.items.length} Challenges`;
+
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            unit.items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-950/80 p-4 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all';
+                div.innerHTML = `
+                    <label for="q_${idx}" class="block font-bold text-slate-300 text-sm mb-2 flex items-center justify-between">
+                        <span>
+                            <span class="text-xs text-amber-400 font-extrabold mr-1.5">[#${idx + 1}]</span>
+                            <span class="text-amber-300 font-black text-base">${item.prompt}</span>
+                        </span>
+                        <button type="button" onclick="speakText('${item.prompt.replace(/'/g, "\\'")}', 1)" class="text-xs text-indigo-400 hover:text-amber-300 cursor-pointer">🔊 Listen</button>
+                    </label>
+                    <input type="text" id="q_${idx}" class="input-gamified w-full px-4 py-3 bg-slate-900 border-2 border-slate-800 focus:border-amber-400 rounded-xl text-amber-300 font-extrabold outline-none" placeholder="Type answer...">
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('navControls').classList.remove('hidden');
+            showScreen('quizScreen');
+            updateTrackerProgress(50);
+        }
+
+        function updateTrackerProgress(pct) {
+            document.getElementById('progressBar').style.width = `${pct}%`;
+        }
+
+        function submitQuiz() {
+            playSound('click');
+            const unit = getActiveUnit();
+            let correctCount = 0;
+            const durationSec = Math.round((Date.now() - quizStartTime) / 1000);
+            missedWordsList = [];
+
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            unit.items.forEach((item, idx) => {
+                const inputEl = document.getElementById(`q_${idx}`);
+                const rawVal = inputEl ? inputEl.value.trim().toLowerCase() : '';
+                
+                const acceptedAnswers = item.de;
+                let isCorrect = acceptedAnswers.some(ans => {
+                    let cleanAns = ans.trim().toLowerCase();
+                    if (cleanAns === rawVal) return true;
+                    if (cleanAns.includes('he ') || cleanAns.includes('she ')) {
+                        let altAns = cleanAns.replace(/^he /, 'she ').replace(/^she /, 'he ');
+                        if (altAns === rawVal) return true;
+                    }
+                    return false;
+                });
+
+                if (isCorrect) correctCount++;
+                else missedWordsList.push(item);
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 ${isCorrect ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-rose-950/30 border-rose-500/50'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <span class="text-xs font-bold text-slate-400">Challenge: <strong class="text-amber-300">${item.prompt}</strong></span>
+                        <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full ${isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
+                            ${isCorrect ? 'Correct +10 XP' : 'Incorrect'}
+                        </span>
+                    </div>
+                    <div class="text-sm font-bold mb-1">
+                        <span class="text-slate-500 text-xs uppercase">Your Answer:</span>
+                        <span class="${isCorrect ? 'text-emerald-400' : 'text-rose-400'} ml-1">${rawVal || '(Blank)'}</span>
+                    </div>
+                    ${!isCorrect ? `
+                        <div class="text-sm font-bold mb-2">
+                            <span class="text-slate-500 text-xs uppercase">Accepted Correct Answer:</span>
+                            <span class="text-amber-300 ml-1">${acceptedAnswers[0]}</span>
+                        </div>
+                    ` : ''}
+                `;
+                resultsList.appendChild(card);
+            });
+
+            const total = unit.items.length;
+            const scorePercent = Math.round((correctCount / total) * 100);
+
+            registerQuestCompletion(correctCount * 10);
+            checkAndUnlockTrophies(durationSec);
+
+            document.getElementById('congratsHeader').textContent = `Awesome run, ${currentUser.realName}!`;
+            document.getElementById('finalScorePercent').textContent = `${scorePercent}%`;
+            document.getElementById('finalScoreMarks').textContent = `${correctCount} / ${total} Marks`;
+
+            let rank = 'LANGUAGE LEGEND';
+            if (scorePercent < 50) rank = 'ROOKIE';
+            else if (scorePercent < 80) rank = 'PRO SKILLER';
+
+            document.getElementById('rankBadge').textContent = rank;
+
+            const reviewBtn = document.getElementById('reviewMissedBtn');
+            if (missedWordsList.length > 0) reviewBtn.classList.remove('hidden');
+            else reviewBtn.classList.add('hidden');
+
+            showScreen('resultsScreen');
+            updateTrackerProgress(100);
+            playSound('fanfare');
+
+            if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+        }
+
+        function launchSmartPracticeMissed() {
+            if (missedWordsList.length === 0) return;
+            startFlashcardsMode(missedWordsList);
+        }
+
+        window.onload = () => {
+            checkRememberedSession();
+        };
+    </script>
+</body>
+</html>

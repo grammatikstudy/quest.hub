@@ -1,0 +1,6 @@
+{
+  "name": "Quest Hub • Learning Arena",
+  "description": "Next-generation vocabulary learning arena featuring German Module 2, Cambridge Latin Book 1, 6-digit multiplayer battles, oral exam teleprompter, universal cloud deck sharing, common errors vault, and customizable interface themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
+/* --- 6 DISTINCT INTERFACE THEME STYLES --- */
+
+/* 1. Cyberpunk HUD */
+.theme-cyberpunk {
+  background-color: #030712 !important;
+  color: #f3f4f6 !important;
+}
+.theme-cyberpunk header,
+.theme-cyberpunk .bg-slate-900 {
+  background-color: #0b0f19 !important;
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.15);
+}
+.theme-cyberpunk .bg-slate-950 {
+  background-color: #030712 !important;
+  border-color: #06b6d4 !important;
+}
+
+/* 2. Zen Minimalist - Harmonized Warm Porcelain Palette */
+.theme-zen {
+  background-color: #fafafa !important;
+  color: #18181b !important;
+}
+.theme-zen header {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+.theme-zen .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.theme-zen .bg-slate-950 {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+.theme-zen .text-white {
+  color: #18181b !important;
+}
+.theme-zen .text-slate-100,
+.theme-zen .text-slate-200,
+.theme-zen .text-slate-300 {
+  color: #27272a !important;
+}
+.theme-zen .text-slate-400,
+.theme-zen .text-slate-500 {
+  color: #71717a !important;
+}
+.theme-zen .border-slate-800,
+.theme-zen .border-slate-700 {
+  border-color: #e4e4e7 !important;
+}
+.theme-zen input,
+.theme-zen textarea,
+.theme-zen select {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #d4d4d8 !important;
+}
+
+/* 3. Retro CRT Arcade / Retro Console */
+.theme-rpg {
+  background-color: #050e07 !important;
+  color: #4ade80 !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+.theme-rpg header,
+.theme-rpg .bg-slate-900 {
+  background-color: #0b1c0e !important;
+  border: 2px solid #22c55e !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.15) !important;
+  color: #86efac !important;
+}
+.theme-rpg .bg-slate-950 {
+  background-color: #050e07 !important;
+  border: 1px solid #166534 !important;
+  border-radius: 4px !important;
+  color: #86efac !important;
+}
+.theme-rpg .text-white {
+  color: #bbf7d0 !important;
+}
+.theme-rpg .text-slate-300,
+.theme-rpg .text-slate-400 {
+  color: #4ade80 !important;
+}
+.theme-rpg button,
+.theme-rpg input,
+.theme-rpg select,
+.theme-rpg textarea {
+  font-family: 'JetBrains Mono', monospace !important;
+  border-radius: 4px !important;
+}
+
+/* 4. Frosted Glass Bento */
+.theme-bento {
+  background: linear-gradient(135deg, #090d16 0%, #1e1b4b 50%, #2e1065 100%) !important;
+  color: #ffffff !important;
+}
+.theme-bento header,
+.theme-bento .bg-slate-900 {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.theme-bento .bg-slate-950 {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 5. Academic Codex */
+.theme-codex {
+  background-color: #181512 !important;
+  color: #e7e5e4 !important;
+}
+.theme-codex header,
+.theme-codex .bg-slate-900 {
+  background-color: #26211c !important;
+  border-color: #78350f !important;
+}
+.theme-codex .bg-slate-950 {
+  background-color: #1c1917 !important;
+  border-color: #451a03 !important;
+}
+
+/* --- ACCESSIBILITY / REAL LARGE PRINT TYPOGRAPHY SCALING --- */
+.font-scale-normal {
+  font-size: 16px;
+}
+
+.font-scale-large {
+  font-size: 19px;
+}
+.font-scale-large h1 { font-size: 2.25rem !important; }
+.font-scale-large h2 { font-size: 1.85rem !important; }
+.font-scale-large h3 { font-size: 1.5rem !important; }
+.font-scale-large h4 { font-size: 1.25rem !important; }
+.font-scale-large p,
+.font-scale-large span,
+.font-scale-large button,
+.font-scale-large input,
+.font-scale-large textarea {
+  font-size: 1.15rem !important;
+}
+
+.font-scale-xlarge {
+  font-size: 23px;
+}
+.font-scale-xlarge h1 { font-size: 2.75rem !important; }
+.font-scale-xlarge h2 { font-size: 2.25rem !important; }
+.font-scale-xlarge h3 { font-size: 1.85rem !important; }
+.font-scale-xlarge h4 { font-size: 1.5rem !important; }
+.font-scale-xlarge p,
+.font-scale-xlarge span,
+.font-scale-xlarge button,
+.font-scale-xlarge input,
+.font-scale-xlarge textarea {
+  font-size: 1.3rem !important;
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quest Hub - Feature & Edit Verification Guide</title>
+  <style>
+    @media print {
+      body { font-size: 11pt; }
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1e293b;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      background: #f8fafc;
+    }
+    .header {
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    h1 { color: #0f172a; margin: 0 0 8px 0; font-size: 28px; }
+    .subtitle { color: #64748b; font-size: 15px; margin: 0; }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    h2 {
+      font-size: 18px;
+      color: #1e40af;
+      margin-top: 0;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+    ul { padding-left: 20px; margin: 10px 0; }
+    li { margin-bottom: 6px; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e0f2fe;
+      color: #0369a1;
+      margin-right: 6px;
+    }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+      margin-left: 10px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+    <a href="/public/invite_codes_roster.html" class="btn btn-secondary">Open Invite Codes Roster</a>
+    <a href="/" class="btn btn-secondary">Return to Quest Hub App</a>
+  </div>
+
+  <div class="header">
+    <h1>Quest Hub • Comprehensive Feature & Verification Guide</h1>
+    <p class="subtitle">Complete inventory of architectural upgrades, vocabulary preservation, and testing procedures.</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Administrator Credentials & Testing Setup</h2>
+    <p>Use these credentials to test administrative privileges, invite audit tracking, and user management:</p>
+    <table>
+      <thead>
+        <tr><th>Role</th><th>Username</th><th>Password</th><th>Features Accessible</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Super Admin</strong></td>
+          <td><code>Rufus_Admin</code></td>
+          <td><code>quest.admin</code></td>
+          <td>Invite code audit tracking, user account deletion, full curriculum access, custom deck manager</td>
+        </tr>
+        <tr>
+          <td><strong>Guest / Student</strong></td>
+          <td>Any registered account</td>
+          <td>Custom</td>
+          <td>Full Flashcard, Learn, Quiz, Common Errors, Shop, Multiplayer, Oral Teleprompter</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>2. Preserved Original Vocabulary (No Truncation)</h2>
+    <ul>
+      <li><span class="badge">German Module 2</span> <strong>Kulturzone + Units 1 through 6</strong>: Complete lexicon intact including articles (der/die/das), plurals, gender variations, and phrase examples.</li>
+      <li><span class="badge">Cambridge Latin</span> <strong>Book 1: Stages 1 through 12</strong>: Every single entry preserved with exact vocabulary and context.</li>
+      <li><span class="badge">Smart Latin Grader</span> <strong>Single Pronoun Support</strong>: Does not force concatenated "he she it works". Separated pronouns such as "he works", "she works", "it works", "is working", or "works" are accepted.</li>
+      <li><span class="badge">German Slash Grammar</span> Supports slashed forms such as <code>die Sch&uuml;ler / die Sch&uuml;lerinnen</code> allowing students to answer with either form.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>3. Multiplayer Arena (Real-Time 6-Digit PIN)</h2>
+    <ul>
+      <li><strong>Local Multi-Tab Real-Time Sync</strong>: Powered by client-side <code>BroadcastChannel</code> API. Open two browser tabs side-by-side to test real-time competition without needing a third-party server.</li>
+      <li><strong>Host Room</strong>: Click "Host Room", select deck and question count, and share the generated 6-digit PIN.</li>
+      <li><strong>Join Room</strong>: Click "Join Room" in another tab, enter PIN, and join the lobby.</li>
+      <li><strong>Live Race Mode</strong>: Questions update in sync, showing live progress bars and player scores.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>4. 5 Distinct Visual Layout Themes</h2>
+    <ul>
+      <li><strong>Default Arena</strong>: High-contrast modern indigo-slate dark and light palette.</li>
+      <li><strong>Cyberpunk HUD</strong>: Angled high-tech telemetry, neon cyan borders, glowing highlights, and tech aesthetic.</li>
+      <li><strong>Zen Minimalist</strong>: Monochromatic ultra-clean lines, wide breathable margins, and distraction-free typography.</li>
+      <li><strong>RPG Retro Console</strong>: Monospace typography, 8-bit arcade styling, and pixel-bordered frames.</li>
+      <li><strong>Frosted Glass Bento</strong>: Apple-style translucent glassmorphism with backdrop blur and frosted card elevation.</li>
+      <li><strong>Clock-Based Auto Dark Mode</strong>: Automatically switches between light and dark modes based on device clock (8:00 PM – 6:00 AM).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>5. Oral Speaking Studio (Teleprompter Exam)</h2>
+    <ul>
+      <li><strong>Teleprompter Script Study</strong>: Prompts with native German and Latin oral examination texts.</li>
+      <li><strong>Show/Hide Script</strong>: Practice reading with text visible or test recall with hidden script.</li>
+      <li><strong>Web Speech Recognition</strong>: Microphone evaluation with forgiving Levenshtein matching and missed word diagnostics.</li>
+      <li><strong>Zero Server Storage</strong>: Audio and transcripts are processed exclusively client-side in the browser.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>6. Spaced Repetition, Cloud Hub & Gamification</h2>
+    <ul>
+      <li><strong>Common Errors Vault</strong>: Automatically saves missed terms from Learn and Quiz modes. Checkboxes allow blurring or graying out mastered items.</li>
+      <li><strong>Completed Test Flow</strong>: Finishing a quiz allows clicking "Completed Test" to gray out the deck and clear solved errors.</li>
+      <li><strong>Universal Cloud Deck Hub</strong>: Public deck catalog with 1-click "Save to Account" (no codes required) and custom deck publishing.</li>
+      <li><strong>Coin Shop & Custom Titles</strong>: Earn coins to unlock cosmetic titles (e.g., <code>@Rufus_Admin - Language Legend</code>) displayed beside usernames.</li>
+      <li><strong>Trophy Cabinet</strong>: 16 achievements across Bronze, Silver, Gold, and Legendary tiers with live progress bars.</li>
+    </ul>
+  </div>
+</body>
+</html>
